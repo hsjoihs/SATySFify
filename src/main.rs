@@ -4,22 +4,21 @@ use std::ffi::CStr;
 
 #[link(name = "compile")]
 extern "C" {
-    fn foo();
 }
 
 #[repr(C)]
 #[derive(PartialEq, Eq, Copy, Clone)]
 pub enum TokenType {
-    ALPHANUMERIC,
-    BACKSLASH_FOLLOWED_BY_ALPHANUMERICS,
-    CARET,
-    UNDERSCORE,
-    ORDINARY_OPERATOR,
-    LEFT_PAREN,
-    RIGHT_PAREN,
-    LEFT_BRACE,
-    RIGHT_BRACE,
-    END,
+    Alphanumeric,
+    BackslashFollowedByAlphanumerics,
+    Caret,
+    Underscore,
+    OrdinaryOperator,
+    LeftParen,
+    RightParen,
+    LeftBrace,
+    RightBrace,
+    End,
 }
 
 #[repr(C)]
@@ -33,7 +32,7 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
     if initial[*ptr_offset] == 0 {
         /* '\0' is 0 in C */
         return Token {
-            kind: TokenType::END,
+            kind: TokenType::End,
             string_representation: std::ptr::null(),
         };
     }
@@ -50,73 +49,73 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
     if initial[*ptr_offset] == b'+' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::ORDINARY_OPERATOR,
+            kind: TokenType::OrdinaryOperator,
             string_representation: b"+\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'*' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::ORDINARY_OPERATOR,
+            kind: TokenType::OrdinaryOperator,
             string_representation: b"*\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'(' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::LEFT_PAREN,
+            kind: TokenType::LeftParen,
             string_representation: b"(\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b')' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::RIGHT_PAREN,
+            kind: TokenType::RightParen,
             string_representation: b")\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b',' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::ORDINARY_OPERATOR,
+            kind: TokenType::OrdinaryOperator,
             string_representation: b",\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'^' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::CARET,
+            kind: TokenType::Caret,
             string_representation: b"^\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'{' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::LEFT_BRACE,
+            kind: TokenType::LeftBrace,
             string_representation: b"{\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'}' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::RIGHT_BRACE,
+            kind: TokenType::RightBrace,
             string_representation: b"}\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'<' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::ORDINARY_OPERATOR,
+            kind: TokenType::OrdinaryOperator,
             string_representation: b"<\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'>' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::ORDINARY_OPERATOR,
+            kind: TokenType::OrdinaryOperator,
             string_representation: b">\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'=' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::ORDINARY_OPERATOR,
+            kind: TokenType::OrdinaryOperator,
             string_representation: b"=\0".as_ptr(),
         };
     } else if initial[*ptr_offset] == b'_' {
         *ptr_offset += 1;
         return Token {
-            kind: TokenType::UNDERSCORE,
+            kind: TokenType::Underscore,
             string_representation: b"_\0".as_ptr(),
         };
     }
@@ -134,7 +133,7 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
         *ptr_offset += 1;
 
         return Token {
-            kind: TokenType::ALPHANUMERIC,
+            kind: TokenType::Alphanumeric,
             string_representation: ptr,
         };
     }
@@ -174,7 +173,7 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
         *ptr_offset += i;
 
         return Token {
-            kind: TokenType::BACKSLASH_FOLLOWED_BY_ALPHANUMERICS,
+            kind: TokenType::BackslashFollowedByAlphanumerics,
             string_representation: ptr,
         };
     }
@@ -199,7 +198,7 @@ fn compile_(input: &mut str) {
             box_offset = Box::from_raw(ptr);
             tokens.push(t);
 
-            if t.kind == TokenType::END {
+            if t.kind == TokenType::End {
                 break;
             }
 
@@ -228,7 +227,7 @@ fn compile_(input: &mut str) {
     print!("{}", "    +math(${\n");
 
     for t in &tokens {
-        if t.kind == TokenType::END {
+        if t.kind == TokenType::End {
             break;
         }
         println!(
