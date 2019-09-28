@@ -21,77 +21,77 @@ struct Token {
 };
 
 struct Token get_token(const char *const initial, size_t *ptr_offset) {
-  const char *str = (initial + *ptr_offset);
   struct Token t;
   t.string_representation = 0;
 
-  if (*str == 0) { /* '\0' is 0 in C */
+  if (initial[*ptr_offset] == 0) { /* '\0' is 0 in C */
     t.kind = END;
     return t;
   }
 
-  if (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\v' ||
-      *str == '\f' || *str == '\r') {
+  if (initial[*ptr_offset] == ' ' || initial[*ptr_offset] == '\t' ||
+      initial[*ptr_offset] == '\n' || initial[*ptr_offset] == '\v' ||
+      initial[*ptr_offset] == '\f' || initial[*ptr_offset] == '\r') {
     ++*ptr_offset;
     return get_token(initial, ptr_offset);
   }
 
-  if (*str == '+') {
+  if (initial[*ptr_offset] == '+') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "+";
     ++*ptr_offset;
     return t;
-  } else if (*str == '*') {
+  } else if (initial[*ptr_offset] == '*') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "*";
     ++*ptr_offset;
     return t;
-  } else if (*str == '(') {
+  } else if (initial[*ptr_offset] == '(') {
     t.kind = LEFT_PAREN;
     t.string_representation = "(";
     ++*ptr_offset;
     return t;
-  } else if (*str == ')') {
+  } else if (initial[*ptr_offset] == ')') {
     t.kind = RIGHT_PAREN;
     t.string_representation = ")";
     ++*ptr_offset;
     return t;
-  } else if (*str == ',') {
+  } else if (initial[*ptr_offset] == ',') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = ",";
     ++*ptr_offset;
     return t;
-  } else if (*str == '^') {
+  } else if (initial[*ptr_offset] == '^') {
     t.kind = CARET;
     t.string_representation = "^";
     ++*ptr_offset;
     return t;
-  } else if (*str == '{') {
+  } else if (initial[*ptr_offset] == '{') {
     t.kind = LEFT_BRACE;
     t.string_representation = "{";
     ++*ptr_offset;
     return t;
-  } else if (*str == '}') {
+  } else if (initial[*ptr_offset] == '}') {
     t.kind = RIGHT_BRACE;
     t.string_representation = "}";
     ++*ptr_offset;
     return t;
-  } else if (*str == '<') {
+  } else if (initial[*ptr_offset] == '<') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "<";
     ++*ptr_offset;
     return t;
-  } else if (*str == '>') {
+  } else if (initial[*ptr_offset] == '>') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = ">";
     ++*ptr_offset;
     return t;
-  } else if (*str == '=') {
+  } else if (initial[*ptr_offset] == '=') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "=";
     ++*ptr_offset;
     return t;
-  } else if (*str == '_') {
+  } else if (initial[*ptr_offset] == '_') {
     t.kind = UNDERSCORE;
     t.string_representation = "_";
     ++*ptr_offset;
@@ -99,23 +99,23 @@ struct Token get_token(const char *const initial, size_t *ptr_offset) {
   }
 
   if (strchr("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-             *str) != NULL) {
+             initial[*ptr_offset]) != NULL) {
     t.kind = ALPHANUMERIC;
     char *rep = calloc(3, sizeof(char));
-    rep[0] = *str;
+    rep[0] = initial[*ptr_offset];
     rep[1] = ' ';
     t.string_representation = rep;
     ++*ptr_offset;
     return t;
   }
 
-  if (*str == '\\') {
+  if (initial[*ptr_offset] == '\\') {
     // If none of these, that's a problem
     if (strchr("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-               str[1]) == NULL) {
+               initial[1 + *ptr_offset]) == NULL) {
       fprintf(stderr,
               "Found unexpected character after a backslash: '%c' (%d)\n",
-              str[1], (int)(str[1]));
+              initial[1 + *ptr_offset], (int)(initial[1 + *ptr_offset]));
       exit(EXIT_FAILURE);
     }
 
@@ -125,25 +125,26 @@ struct Token get_token(const char *const initial, size_t *ptr_offset) {
     for (;; ++i) {
       if (strchr("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
                  "0123456789",
-                 str[i]) == NULL) {
+                 (initial + *ptr_offset)[i]) == NULL) {
         break;
       }
     }
     /*
-        identifier: str[1] ~ str[i-1]
+        identifier: (initial + *ptr_offset)[1] ~ (initial + *ptr_offset)[i-1]
     */
     char *new_str = malloc(i + 1);
 
     for (int j = 0; j < i; j++) {
-      new_str[j] = str[j];
+      new_str[j] = initial[*ptr_offset + j];
     }
     new_str[i] = '\0';
     t.string_representation = new_str;
-    *ptr_offset = str + i - initial;
+    *ptr_offset += i;
     return t;
   }
 
-  fprintf(stderr, "Found unexpected character: '%c' (%d)\n", *str, (int)*str);
+  fprintf(stderr, "Found unexpected character: '%c' (%d)\n",
+          initial[*ptr_offset], (int)initial[*ptr_offset]);
   exit(EXIT_FAILURE);
 }
 
