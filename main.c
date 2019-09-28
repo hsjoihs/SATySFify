@@ -167,10 +167,11 @@ int main(int argc, char **argv) {
   }
 
   struct Token *tokens = calloc(i, sizeof(struct Token));
-  while (1) {
+
+  for (int j = 0;;) {
     struct Token t = get_token(ptr_to_input);
-    tokens[i] = t;
-    i++;
+    tokens[j] = t;
+    j++;
 
     if (t.kind == END) {
       break;
