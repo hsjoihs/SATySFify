@@ -12,15 +12,13 @@ document (|
 |) '<
   +section{}<
     +math(${
-      \int
-      e
-      ^
-      x
-      x
-      ^
+      \frac
+      {
+      2
+      }
+      {
       3
-      d
-      x
+      }
     });
   >
 >

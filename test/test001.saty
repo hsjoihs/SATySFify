@@ -12,8 +12,8 @@ document (|
 |) '<
   +section{}<
     +math(${
-      4 
-      2 
+      4
+      2
     });
   >
 >
