@@ -147,12 +147,18 @@ struct Token get_token(const char **ptr_to_str) {
   exit(EXIT_FAILURE);
 }
 
+void compile(char *input);
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     fprintf(stderr, "Incorrect number of arguments\n");
     return 1;
   }
-  const char *str = argv[1];
+  compile(argv[1]);
+}
+
+void compile(char *input) {
+  const char *str = input;
   const char **ptr_to_input = &str;
 
   int i = 0;
@@ -167,7 +173,7 @@ int main(int argc, char **argv) {
   }
 
   struct Token *tokens = calloc(i, sizeof(struct Token));
-  const char *str2 = argv[1];
+  const char *str2 = input;
   ptr_to_input = &str2;
   for (int j = 0;;) {
     struct Token t = get_token(ptr_to_input);
@@ -206,5 +212,5 @@ int main(int argc, char **argv) {
   printf("  >\n");
   printf(">\n");
 
-  return 0;
+  return;
 }

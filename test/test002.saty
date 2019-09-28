@@ -12,8 +12,15 @@ document (|
 |) '<
   +section{}<
     +math(${
-      4 
-      2 
+      \int
+      e 
+      ^
+      x 
+      x 
+      ^
+      3 
+      d 
+      x 
     });
   >
 >
