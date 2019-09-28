@@ -13,14 +13,14 @@ document (|
   +section{}<
     +math(${
       \int
-      e 
+      e
       ^
-      x 
-      x 
+      x
+      x
       ^
-      3 
-      d 
-      x 
+      3
+      d
+      x
     });
   >
 >
