@@ -1,6 +1,5 @@
 extern crate libc;
 use std::env;
-use std::ffi::CStr;
 
 #[link(name = "compile")]
 extern "C" {}
@@ -28,7 +27,7 @@ pub struct Token {
 }
 
 fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
-    if initial[*offset] == b'\0' {
+    if initial.len() == *offset {
         return Token {
             kind: TokenType::End,
             str_repr: "".to_string(),
@@ -177,14 +176,12 @@ fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
     panic!();
 }
 
-fn compile_(input: &mut str) {
+fn compile_(input: &[u8]) {
     let mut offset: usize = 0;
 
     let mut tokens = Vec::new();
     loop {
-        let initial =
-            unsafe { CStr::from_ptr(input.as_mut_ptr() as *const i8).to_bytes_with_nul() };
-        let t = get_token2(initial, &mut offset);
+        let t = get_token2(input, &mut offset);
 
         if t.kind == TokenType::End {
             tokens.push(t);
@@ -228,6 +225,6 @@ fn main() {
     if args.len() != 2 {
         panic!("Incorrect number of arguments\n");
     }
-    let mut input = args[1].clone();
+    let mut input = args[1].clone().into_bytes();
     compile_(&mut input)
 }
