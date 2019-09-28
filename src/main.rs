@@ -192,11 +192,9 @@ fn compile_(input: &[char]) {
         }
     }
 
-    print!("{}", "@require: stdjabook\n");
-    print!("{}", "@require: code\n");
-    print!("{}", "@require: itemize\n");
-    print!("{}", "@require: tabular\n");
-    print!("{}", "@require: math\n");
+    for lib in vec!["stdjabook", "code", "itemize", "tabular", "math"] {
+        println!("@require: {}", lib);
+    }
     print!("{}", "\n");
     print!("{}", "document (|\n");
     print!("{}", "  title = {};\n");
