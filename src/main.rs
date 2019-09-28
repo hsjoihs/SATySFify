@@ -29,11 +29,6 @@ pub struct Token {
     string_representation: *const u8,
 }
 
-unsafe fn get_token_(initial_: *const u8, ptr_offset: *mut usize) -> Token {
-    let initial = CStr::from_ptr(initial_ as *const i8).to_bytes_with_nul();
-    get_token2(initial, ptr_offset)
-}
-
 unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
     if initial[*ptr_offset] == 0 {
         /* '\0' is 0 in C */
@@ -191,15 +186,16 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
     panic!();
 }
 
-fn compile_(input: *mut u8) {
-    let init = input;
+fn compile_(input: &mut str) {
+    let init = input.as_mut_ptr();
     let mut box_offset: Box<usize> = Box::new(0);
 
     let mut tokens = Vec::new();
     loop {
         let ptr = Box::into_raw(box_offset);
         unsafe {
-            let t = get_token_(init, ptr);
+            let initial = CStr::from_ptr(init as *const i8).to_bytes_with_nul();
+            let t = get_token2(initial, ptr);
             box_offset = Box::from_raw(ptr);
             tokens.push(t);
 
@@ -255,5 +251,5 @@ fn main() {
         panic!("Incorrect number of arguments\n");
     }
     let mut input = args[1].clone();
-    compile_(input.as_mut_ptr())
+    compile_(&mut input)
 }
