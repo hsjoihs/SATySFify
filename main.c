@@ -20,8 +20,8 @@ struct Token {
   const char *string_representation;
 };
 
-struct Token get_token(const char **ptr_to_str) {
-  const char *str = *ptr_to_str;
+struct Token get_token(const char *const initial, size_t *ptr_offset) {
+  const char *str = (initial + *ptr_offset);
   struct Token t;
   t.string_representation = 0;
 
@@ -32,69 +32,69 @@ struct Token get_token(const char **ptr_to_str) {
 
   if (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\v' ||
       *str == '\f' || *str == '\r') {
-    ++*ptr_to_str;
-    return get_token(ptr_to_str);
+    ++*ptr_offset;
+    return get_token(initial, ptr_offset);
   }
 
   if (*str == '+') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "+";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '*') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "*";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '(') {
     t.kind = LEFT_PAREN;
     t.string_representation = "(";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == ')') {
     t.kind = RIGHT_PAREN;
     t.string_representation = ")";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == ',') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = ",";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '^') {
     t.kind = CARET;
     t.string_representation = "^";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '{') {
     t.kind = LEFT_BRACE;
     t.string_representation = "{";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '}') {
     t.kind = RIGHT_BRACE;
     t.string_representation = "}";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '<') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "<";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '>') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = ">";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '=') {
     t.kind = ORDINARY_OPERATOR;
     t.string_representation = "=";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   } else if (*str == '_') {
     t.kind = UNDERSCORE;
     t.string_representation = "_";
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   }
 
@@ -105,7 +105,7 @@ struct Token get_token(const char **ptr_to_str) {
     rep[0] = *str;
     rep[1] = ' ';
     t.string_representation = rep;
-    ++*ptr_to_str;
+    ++*ptr_offset;
     return t;
   }
 
@@ -139,7 +139,7 @@ struct Token get_token(const char **ptr_to_str) {
     }
     new_str[i] = '\0';
     t.string_representation = new_str;
-    *ptr_to_str = str + i;
+    *ptr_offset = str + i - initial;
     return t;
   }
 
@@ -148,12 +148,12 @@ struct Token get_token(const char **ptr_to_str) {
 }
 
 void compile(char *input) {
-  const char *str = input;
-  const char **ptr_to_input = &str;
+  const char *init = input;
+  size_t offset = 0;
 
   int i = 0;
   while (1) {
-    struct Token t = get_token(ptr_to_input);
+    struct Token t = get_token(init, &offset);
 
     i++;
     if (t.kind == END) {
@@ -163,10 +163,9 @@ void compile(char *input) {
   }
 
   struct Token *tokens = calloc(i, sizeof(struct Token));
-  const char *str2 = input;
-  ptr_to_input = &str2;
+  offset = 0;
   for (int j = 0;;) {
-    struct Token t = get_token(ptr_to_input);
+    struct Token t = get_token(init, &offset);
     tokens[j] = t;
     j++;
 
