@@ -24,7 +24,6 @@ pub enum TokenType {
 #[derive(Clone)]
 pub struct Token {
     kind: TokenType,
-    string_representation: *const u8,
     str_repr: String,
 }
 
@@ -32,7 +31,6 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
     if initial[*ptr_offset] == b'\0' {
         return Token {
             kind: TokenType::End,
-            string_representation: std::ptr::null(),
             str_repr: "".to_string(),
         };
     }
@@ -50,84 +48,72 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
-            string_representation: b"+\0".as_ptr(),
             str_repr: "+".to_string(),
         };
     } else if initial[*ptr_offset] == b'*' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
-            string_representation: b"*\0".as_ptr(),
             str_repr: "*".to_string(),
         };
     } else if initial[*ptr_offset] == b'(' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::LeftParen,
-            string_representation: b"(\0".as_ptr(),
             str_repr: "(".to_string(),
         };
     } else if initial[*ptr_offset] == b')' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::RightParen,
-            string_representation: b")\0".as_ptr(),
             str_repr: ")".to_string(),
         };
     } else if initial[*ptr_offset] == b',' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
-            string_representation: b",\0".as_ptr(),
             str_repr: ",".to_string(),
         };
     } else if initial[*ptr_offset] == b'^' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::Caret,
-            string_representation: b"^\0".as_ptr(),
             str_repr: "^".to_string(),
         };
     } else if initial[*ptr_offset] == b'{' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::LeftBrace,
-            string_representation: b"{\0".as_ptr(),
             str_repr: "{".to_string(),
         };
     } else if initial[*ptr_offset] == b'}' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::RightBrace,
-            string_representation: b"}\0".as_ptr(),
             str_repr: "}".to_string(),
         };
     } else if initial[*ptr_offset] == b'<' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
-            string_representation: b"<\0".as_ptr(),
             str_repr: "<".to_string(),
         };
     } else if initial[*ptr_offset] == b'>' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
-            string_representation: b">\0".as_ptr(),
             str_repr: ">".to_string(),
         };
     } else if initial[*ptr_offset] == b'=' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
-            string_representation: b"=\0".as_ptr(),
             str_repr: "=".to_string(),
         };
     } else if initial[*ptr_offset] == b'_' {
         *ptr_offset += 1;
         return Token {
             kind: TokenType::Underscore,
-            string_representation: b"_\0".as_ptr(),
             str_repr: "_".to_string(),
         };
     }
@@ -149,7 +135,6 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
 
         return Token {
             kind: TokenType::Alphanumeric,
-            string_representation: ptr,
             str_repr: st,
         };
     }
@@ -192,7 +177,6 @@ unsafe fn get_token2(initial: &[u8], ptr_offset: *mut usize) -> Token {
 
         return Token {
             kind: TokenType::BackslashFollowedByAlphanumerics,
-            string_representation: ptr,
             str_repr: new_st,
         };
     }
@@ -246,12 +230,7 @@ fn compile_(input: &mut str) {
         if t.kind == TokenType::End {
             break;
         }
-        println!(
-            "      {}",
-            unsafe { CStr::from_ptr(t.string_representation as *const i8) }
-                .to_str()
-                .unwrap()
-        )
+        println!("      {}", t.str_repr)
     }
 
     print!("{}", "    });\n");
