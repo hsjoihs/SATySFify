@@ -1,6 +1,6 @@
 c:
 	clang-format main.c -i
-	gcc main.c -o a.out
+	gcc main.c -o a.out -Wall
 	./a.out '\int e^x x^3dx'
 
 all:

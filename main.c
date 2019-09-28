@@ -167,7 +167,8 @@ int main(int argc, char **argv) {
   }
 
   struct Token *tokens = calloc(i, sizeof(struct Token));
-
+  const char *str2 = argv[1];
+  ptr_to_input = &str2;
   for (int j = 0;;) {
     struct Token t = get_token(ptr_to_input);
     tokens[j] = t;
@@ -192,7 +193,15 @@ int main(int argc, char **argv) {
   printf("|) '<\n");
   printf("  +section{}<\n");
   printf("    +math(${\n");
-  printf("      %d\n", 42);
+  for (int j = 0;;) {
+    struct Token t = tokens[j];
+    j++;
+
+    if (t.kind == END) {
+      break;
+    }
+    printf("      %s\n", t.string_representation);
+  }
   printf("    });\n");
   printf("  >\n");
   printf(">\n");
