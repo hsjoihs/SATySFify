@@ -182,17 +182,16 @@ fn compile_(input: &mut str) {
 
     let mut tokens = Vec::new();
     loop {
-        unsafe {
-            let initial = CStr::from_ptr(input.as_mut_ptr() as *const i8).to_bytes_with_nul();
-            let t = get_token2(initial, &mut offset);
+        let initial =
+            unsafe { CStr::from_ptr(input.as_mut_ptr() as *const i8).to_bytes_with_nul() };
+        let t = get_token2(initial, &mut offset);
 
-            if t.kind == TokenType::End {
-                tokens.push(t);
-                break;
-            } else {
-                eprintln!("{}", t.str_repr);
-                tokens.push(t);
-            }
+        if t.kind == TokenType::End {
+            tokens.push(t);
+            break;
+        } else {
+            eprintln!("{}", t.str_repr);
+            tokens.push(t);
         }
     }
 
