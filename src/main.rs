@@ -178,24 +178,20 @@ fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
 }
 
 fn compile_(input: &mut str) {
-    let init = input.as_mut_ptr();
-    let mut box_offset: Box<usize> = Box::new(0);
+    let mut offset: usize = 0;
 
     let mut tokens = Vec::new();
     loop {
-        let ptr = Box::into_raw(box_offset);
         unsafe {
-            let initial = CStr::from_ptr(init as *const i8).to_bytes_with_nul();
-            let t = get_token2(initial, &mut *ptr);
-            box_offset = Box::from_raw(ptr);
+            let initial = CStr::from_ptr(input.as_mut_ptr() as *const i8).to_bytes_with_nul();
+            let t = get_token2(initial, &mut offset);
 
             if t.kind == TokenType::End {
                 tokens.push(t);
                 break;
             } else {
-                let st = t.str_repr.clone();
+                eprintln!("{}", t.str_repr);
                 tokens.push(t);
-                eprintln!("{}", st);
             }
         }
     }
