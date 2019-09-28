@@ -147,16 +147,6 @@ struct Token get_token(const char **ptr_to_str) {
   exit(EXIT_FAILURE);
 }
 
-void compile(char *input);
-
-int main(int argc, char **argv) {
-  if (argc != 2) {
-    fprintf(stderr, "Incorrect number of arguments\n");
-    return 1;
-  }
-  compile(argv[1]);
-}
-
 void compile(char *input) {
   const char *str = input;
   const char **ptr_to_input = &str;
