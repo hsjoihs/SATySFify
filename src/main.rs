@@ -26,7 +26,7 @@ pub struct Token {
     str_repr: String,
 }
 
-fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
+fn get_token2(initial: &[char], offset: &mut usize) -> Token {
     if initial.len() == *offset {
         return Token {
             kind: TokenType::End,
@@ -34,82 +34,82 @@ fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
         };
     }
 
-    if initial[*offset] == b' '
-        || initial[*offset] == b'\t'
-        || initial[*offset] == b'\n'
-        || initial[*offset] == b'\r'
+    if initial[*offset] == ' '
+        || initial[*offset] == '\t'
+        || initial[*offset] == '\n'
+        || initial[*offset] == '\r'
     {
         *offset += 1;
         return get_token2(initial, offset);
     }
 
-    if initial[*offset] == b'+' {
+    if initial[*offset] == '+' {
         *offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
             str_repr: "+".to_string(),
         };
-    } else if initial[*offset] == b'*' {
+    } else if initial[*offset] == '*' {
         *offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
             str_repr: "*".to_string(),
         };
-    } else if initial[*offset] == b'(' {
+    } else if initial[*offset] == '(' {
         *offset += 1;
         return Token {
             kind: TokenType::LeftParen,
             str_repr: "(".to_string(),
         };
-    } else if initial[*offset] == b')' {
+    } else if initial[*offset] == ')' {
         *offset += 1;
         return Token {
             kind: TokenType::RightParen,
             str_repr: ")".to_string(),
         };
-    } else if initial[*offset] == b',' {
+    } else if initial[*offset] == ',' {
         *offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
             str_repr: ",".to_string(),
         };
-    } else if initial[*offset] == b'^' {
+    } else if initial[*offset] == '^' {
         *offset += 1;
         return Token {
             kind: TokenType::Caret,
             str_repr: "^".to_string(),
         };
-    } else if initial[*offset] == b'{' {
+    } else if initial[*offset] == '{' {
         *offset += 1;
         return Token {
             kind: TokenType::LeftBrace,
             str_repr: "{".to_string(),
         };
-    } else if initial[*offset] == b'}' {
+    } else if initial[*offset] == '}' {
         *offset += 1;
         return Token {
             kind: TokenType::RightBrace,
             str_repr: "}".to_string(),
         };
-    } else if initial[*offset] == b'<' {
+    } else if initial[*offset] == '<' {
         *offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
             str_repr: "<".to_string(),
         };
-    } else if initial[*offset] == b'>' {
+    } else if initial[*offset] == '>' {
         *offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
             str_repr: ">".to_string(),
         };
-    } else if initial[*offset] == b'=' {
+    } else if initial[*offset] == '=' {
         *offset += 1;
         return Token {
             kind: TokenType::OrdinaryOperator,
             str_repr: "=".to_string(),
         };
-    } else if initial[*offset] == b'_' {
+    } else if initial[*offset] == '_' {
         *offset += 1;
         return Token {
             kind: TokenType::Underscore,
@@ -117,9 +117,9 @@ fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
         };
     }
 
-    if (initial[*offset] >= b'a' && initial[*offset] <= b'z')
-        || (initial[*offset] >= b'A' && initial[*offset] <= b'Z')
-        || (initial[*offset] >= b'0' && initial[*offset] <= b'9')
+    if (initial[*offset] >= 'a' && initial[*offset] <= 'z')
+        || (initial[*offset] >= 'A' && initial[*offset] <= 'Z')
+        || (initial[*offset] >= '0' && initial[*offset] <= '9')
     {
         let mut st = String::from("");
         st.push(initial[*offset] as char);
@@ -132,10 +132,10 @@ fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
         };
     }
 
-    if initial[*offset] == b'\\' {
+    if initial[*offset] == '\\' {
         let after_backslash = initial[1 + *offset];
-        if !((after_backslash >= b'a' && after_backslash <= b'z')
-            || (after_backslash >= b'A' && after_backslash <= b'Z'))
+        if !((after_backslash >= 'a' && after_backslash <= 'z')
+            || (after_backslash >= 'A' && after_backslash <= 'Z'))
         {
             eprintln!(
                 "Found unexpected character after a backslash: '{}' ({})\n",
@@ -148,7 +148,7 @@ fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
 
         loop {
             let c = initial[i + *offset];
-            if !((c >= b'a' && c <= b'z') || (c >= b'A' && c <= b'Z') || (c >= b'0' && c <= b'9')) {
+            if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
                 break;
             }
             i += 1;
@@ -176,7 +176,7 @@ fn get_token2(initial: &[u8], offset: &mut usize) -> Token {
     panic!();
 }
 
-fn compile_(input: &[u8]) {
+fn compile_(input: &[char]) {
     let mut offset: usize = 0;
 
     let mut tokens = Vec::new();
@@ -225,6 +225,6 @@ fn main() {
     if args.len() != 2 {
         panic!("Incorrect number of arguments\n");
     }
-    let mut input = args[1].clone().into_bytes();
+    let mut input: Vec<char> = args[1].clone().chars().collect();
     compile_(&mut input)
 }
