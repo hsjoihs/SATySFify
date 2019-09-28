@@ -29,27 +29,29 @@ pub struct Token {
     string_representation: *const u8,
 }
 
-unsafe fn compile_(input: *mut u8) {
+fn compile_(input: *mut u8) {
     let init = input;
     let mut box_offset: Box<usize> = Box::new(0);
 
     let mut tokens = Vec::new();
     loop {
         let ptr = Box::into_raw(box_offset);
-        let t = get_token(init, ptr);
-        box_offset = Box::from_raw(ptr);
-        tokens.push(t);
+        unsafe {
+            let t = get_token(init, ptr);
+            box_offset = Box::from_raw(ptr);
+            tokens.push(t);
 
-        if t.kind == TokenType::END {
-            break;
+            if t.kind == TokenType::END {
+                break;
+            }
+
+            eprintln!(
+                "{}",
+                CStr::from_ptr(t.string_representation as *const i8)
+                    .to_str()
+                    .unwrap()
+            );
         }
-
-        eprintln!(
-            "{}",
-            CStr::from_ptr(t.string_representation as *const i8)
-                .to_str()
-                .unwrap()
-        );
     }
 
     print!("{}", "@require: stdjabook\n");
@@ -73,7 +75,7 @@ unsafe fn compile_(input: *mut u8) {
         }
         println!(
             "      {}",
-            CStr::from_ptr(t.string_representation as *const i8)
+            unsafe { CStr::from_ptr(t.string_representation as *const i8) }
                 .to_str()
                 .unwrap()
         )
@@ -91,5 +93,5 @@ fn main() {
         panic!("Incorrect number of arguments\n");
     }
     let mut input = args[1].clone();
-    unsafe { compile_(input.as_mut_ptr()) }
+    compile_(input.as_mut_ptr())
 }
