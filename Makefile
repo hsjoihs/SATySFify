@@ -7,3 +7,5 @@ all:
 	satysfi test/test002.saty
 	./target/debug/SATySFify '\frac{2}{3}' > test/test003.saty
 	satysfi test/test003.saty
+	./target/debug/SATySFify 'e^{x}\frac{1}{D+1} q \equiv \int e^x qdx' > test/test004.saty
+	satysfi test/test004.saty
