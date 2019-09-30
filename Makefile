@@ -21,3 +21,7 @@ all:
 	satysfi test/test009.saty
 	./target/debug/SATySFify '\nabla_{\alpha}(P^\lambda_{\mu\nu}U^{\nu}_\beta) = U^{\nu}_\beta\nabla_{\alpha}P^\lambda_{\mu\nu} + P^\lambda_{\mu\nu} \nabla_{\alpha}U^{\nu}_\beta' > test/test010.saty
 	satysfi test/test010.saty
+	./target/debug/SATySFify '\frac{\partial H(a,b)}{\partial b} = \frac{b}{m}' > test/test011.saty
+	satysfi test/test011.saty
+	./target/debug/SATySFify '\frac{4}{\pi}\int _0^{\pi/2} \sin((2n-1)x) (\sin x)^{b} dx' > test/test012.saty
+	satysfi test/test012.saty

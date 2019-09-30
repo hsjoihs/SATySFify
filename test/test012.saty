@@ -1,0 +1,56 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      \frac
+      {
+        4
+      }
+      {
+        \pi
+      }
+      \int
+      _
+      0
+      ^
+      {
+        \pi
+        /
+        2
+      }
+      \sin
+      \paren
+      {
+        \paren
+        {
+          2
+          n
+          -
+          1
+        }
+        x
+      }
+      \paren
+      {
+        \sin
+        x
+      }
+      ^
+      {
+        b
+      }
+      d
+      x
+    });
+  >
+>

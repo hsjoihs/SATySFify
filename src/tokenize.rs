@@ -80,6 +80,11 @@ pub mod tok {
                         kind: TokenType::OrdinaryOperator,
                         str_repr: "|".to_string(),
                     });
+                } else if ch == '/' {
+                    return Some(Token {
+                        kind: TokenType::OrdinaryOperator,
+                        str_repr: "/".to_string(),
+                    });
                 } else if ch == '^' {
                     return Some(Token {
                         kind: TokenType::Caret,
