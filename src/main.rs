@@ -9,20 +9,7 @@ mod tokenize;
 pub use crate::tokenize::tok;
 
 fn compile_(input: &[char]) {
-    let mut offset: usize = 0;
-
-    let mut tokens = Vec::new();
-    loop {
-        let t = tok::get_token2(input, &mut offset);
-
-        if t.kind == tok::TokenType::End {
-            tokens.push(t);
-            break;
-        } else {
-            eprintln!("{}", t.str_repr);
-            tokens.push(t);
-        }
-    }
+    let tokens = tok::to_tokens(input);
 
     for lib in vec!["stdjabook", "code", "itemize", "tabular", "math"] {
         println!("@require: {}", lib);
