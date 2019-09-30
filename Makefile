@@ -1,5 +1,4 @@
 all:
-	clang-format main.c -i
 	cargo fmt
 	cargo build
 	./target/debug/SATySFify 42 > test/test001.saty

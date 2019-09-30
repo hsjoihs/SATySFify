@@ -1,9 +1,6 @@
 extern crate libc;
 use std::env;
 
-#[link(name = "compile")]
-extern "C" {}
-
 mod tokenize;
 
 pub use crate::tokenize::tok;
