@@ -88,6 +88,13 @@ fn to_stuffs_(
     res
 }
 
+fn print_expr(tokens: &[tok::Token]) {
+    for t in tokens {
+        let indent = 6;
+        println!("{:indent$}{}", "", t.str_repr, indent = indent);
+    }
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
 
@@ -110,10 +117,7 @@ fn main() {
     println!("  +section{{}}<");
     println!("    +math(${{");
 
-    for t in &tokens {
-        println!("      {}", t.str_repr)
-    }
-
+    print_expr(&tokens);
     eprintln!("{:?}", to_stuffs(tokens));
 
     println!("    }});");
