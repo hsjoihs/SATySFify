@@ -20,3 +20,5 @@ all:
 	satysfi test/test008.saty
 	./target/debug/SATySFify '\int e^x x^3dx = e^x(x^3-3x^2+6x-6) + C' > test/test009.saty
 	satysfi test/test009.saty
+	./target/debug/SATySFify '\nabla_{\alpha}(P^\lambda_{\mu\nu}U^{\nu}_\beta) = U^{\nu}_\beta\nabla_{\alpha}P^\lambda_{\mu\nu} + P^\lambda_{\mu\nu} \nabla_{\alpha}U^{\nu}_\beta' > test/test010.saty
+	satysfi test/test010.saty

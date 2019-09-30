@@ -159,6 +159,10 @@ pub mod tok {
         }
 
         if initial[*offset] == '\\' {
+            if initial.len() == 1 + *offset {
+                eprintln!("Found unexpected end of input after a backslash\n");
+                panic!();
+            }
             let after_backslash = initial[1 + *offset];
             if !((after_backslash >= 'a' && after_backslash <= 'z')
                 || (after_backslash >= 'A' && after_backslash <= 'Z'))
@@ -173,6 +177,9 @@ pub mod tok {
             let mut i = 2;
 
             loop {
+                if initial.len() == i + *offset {
+                    break;
+                }
                 let c = initial[i + *offset];
                 if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
                     break;
