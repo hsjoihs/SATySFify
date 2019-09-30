@@ -12,29 +12,30 @@ document (|
 |) '<
   +section{}<
     +math(${
-      e
-      ^
-      {
-        x
-      }
-      \frac
-      {
-        1
-      }
-      {
-        D
-        +
-        1
-      }
-      q
-      \equiv
       \int
+      _
+      0
+      ^
+      R
       e
       ^
-      x
-      q
+      {
+        -
+        4
+        R
+        \paren
+        {
+          R
+          -
+          t
+        }
+      }
+      \sqrt
+      {
+        2
+      }
       d
-      x
+      t
     });
   >
 >

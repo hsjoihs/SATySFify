@@ -88,10 +88,18 @@ fn to_stuffs_(
     res
 }
 
-fn print_expr(tokens: &[tok::Token]) {
-    for t in tokens {
-        let indent = 6;
-        println!("{:indent$}{}", "", t.str_repr, indent = indent);
+fn print_expr_(stuffs: &[Stuff], indent: usize) {
+    for st in stuffs {
+        match st {
+            Stuff::Simple(t) => {
+                println!("{:indent$}{}", "", t.str_repr, indent = indent);
+            }
+            Stuff::Braced(vec) => {
+                println!("{:indent$}{}", "", "{", indent = indent);
+                print_expr_(vec, indent + 2);
+                println!("{:indent$}{}", "", "}", indent = indent);
+            }
+        }
     }
 }
 
@@ -117,8 +125,9 @@ fn main() {
     println!("  +section{{}}<");
     println!("    +math(${{");
 
-    print_expr(&tokens);
-    eprintln!("{:?}", to_stuffs(tokens));
+    let stuffs = to_stuffs(tokens);
+    print_expr_(&stuffs, 6);
+    eprintln!("{:?}", stuffs);
 
     println!("    }});");
     println!("  >");

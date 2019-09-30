@@ -12,29 +12,34 @@ document (|
 |) '<
   +section{}<
     +math(${
-      e
-      ^
+      \frac
       {
-        x
+        2
+      }
+      {
+        a
+        b
       }
       \frac
       {
-        1
+        d
+        ^
+        3
       }
       {
-        D
-        +
-        1
+        d
+        \theta
+        ^
+        3
       }
-      q
-      \equiv
-      \int
-      e
-      ^
-      x
-      q
-      d
-      x
+      S
+      _
+      {
+        t
+        r
+        u
+        e
+      }
     });
   >
 >

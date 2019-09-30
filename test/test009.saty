@@ -12,29 +12,37 @@ document (|
 |) '<
   +section{}<
     +math(${
-      e
-      ^
-      {
-        x
-      }
-      \frac
-      {
-        1
-      }
-      {
-        D
-        +
-        1
-      }
-      q
-      \equiv
       \int
       e
       ^
       x
-      q
+      x
+      ^
+      3
       d
       x
+      =
+      e
+      ^
+      x
+      \paren
+      {
+        x
+        ^
+        3
+        -
+        3
+        x
+        ^
+        2
+        +
+        6
+        x
+        -
+        6
+      }
+      +
+      C
     });
   >
 >

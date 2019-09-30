@@ -111,6 +111,12 @@ pub mod tok {
                 kind: TokenType::RightBrace,
                 str_repr: "}".to_string(),
             });
+        } else if initial[*offset] == '-' {
+            *offset += 1;
+            return Some(Token {
+                kind: TokenType::OrdinaryOperator,
+                str_repr: "-".to_string(),
+            });
         } else if initial[*offset] == '<' {
             *offset += 1;
             return Some(Token {
