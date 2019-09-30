@@ -39,9 +39,7 @@ pub mod tok {
     }
     fn get_token2(iter: &mut std::iter::Peekable<std::slice::Iter<'_, char>>) -> Option<Token> {
         match iter.next() {
-            None => {
-                return None;
-            }
+            None => None,
             Some(&ch) => {
                 if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
                     return get_token2(iter);

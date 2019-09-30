@@ -95,9 +95,9 @@ fn print_expr_(stuffs: &[Stuff], indent: usize) {
                 println!("{:indent$}{}", "", t.str_repr, indent = indent);
             }
             Stuff::Braced(vec) => {
-                println!("{:indent$}{}", "", "{", indent = indent);
+                println!("{:indent$}{{", "", indent = indent);
                 print_expr_(vec, indent + 2);
-                println!("{:indent$}{}", "", "}", indent = indent);
+                println!("{:indent$}}}", "", indent = indent);
             }
         }
     }
