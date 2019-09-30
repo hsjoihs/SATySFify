@@ -1,6 +1,6 @@
 pub mod tok {
     #[repr(C)]
-    #[derive(PartialEq, Eq, Copy, Clone)]
+    #[derive(PartialEq, Eq, Copy, Clone, Debug)]
     pub enum TokenType {
         Alphanumeric,
         BackslashFollowedByAlphanumerics,
@@ -14,7 +14,7 @@ pub mod tok {
     }
 
     #[repr(C)]
-    #[derive(Clone)]
+    #[derive(Clone, Debug)]
     pub struct Token {
         pub kind: TokenType,
         pub str_repr: String,
@@ -80,6 +80,18 @@ pub mod tok {
             return Some(Token {
                 kind: TokenType::OrdinaryOperator,
                 str_repr: ",".to_string(),
+            });
+        } else if initial[*offset] == '.' {
+            *offset += 1;
+            return Some(Token {
+                kind: TokenType::OrdinaryOperator,
+                str_repr: ".".to_string(),
+            });
+        } else if initial[*offset] == '|' {
+            *offset += 1;
+            return Some(Token {
+                kind: TokenType::OrdinaryOperator,
+                str_repr: "|".to_string(),
             });
         } else if initial[*offset] == '^' {
             *offset += 1;
