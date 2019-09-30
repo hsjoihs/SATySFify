@@ -38,7 +38,7 @@ pub mod tok {
 
         tokens
     }
-    pub fn get_token2(initial: &[char], offset: &mut usize) -> Token {
+    fn get_token2(initial: &[char], offset: &mut usize) -> Token {
         if initial.len() == *offset {
             return Token {
                 kind: TokenType::End,
