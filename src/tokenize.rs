@@ -11,7 +11,6 @@ pub mod tok {
         RightParen,
         LeftBrace,
         RightBrace,
-        End,
     }
 
     #[repr(C)]
@@ -25,25 +24,22 @@ pub mod tok {
 
         let mut tokens = Vec::new();
         loop {
-            let t = get_token2(input, &mut offset);
-
-            if t.kind == TokenType::End {
-                tokens.push(t);
-                break;
-            } else {
-                eprintln!("{}", t.str_repr);
-                tokens.push(t);
+            match get_token2(input, &mut offset) {
+                None => {
+                    break;
+                }
+                Some(t) => {
+                    eprintln!("{}", t.str_repr);
+                    tokens.push(t);
+                }
             }
         }
 
         tokens
     }
-    fn get_token2(initial: &[char], offset: &mut usize) -> Token {
+    fn get_token2(initial: &[char], offset: &mut usize) -> Option<Token> {
         if initial.len() == *offset {
-            return Token {
-                kind: TokenType::End,
-                str_repr: "".to_string(),
-            };
+            return None;
         }
 
         if initial[*offset] == ' '
@@ -57,76 +53,76 @@ pub mod tok {
 
         if initial[*offset] == '+' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::OrdinaryOperator,
                 str_repr: "+".to_string(),
-            };
+            });
         } else if initial[*offset] == '*' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::OrdinaryOperator,
                 str_repr: "*".to_string(),
-            };
+            });
         } else if initial[*offset] == '(' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::LeftParen,
                 str_repr: "(".to_string(),
-            };
+            });
         } else if initial[*offset] == ')' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::RightParen,
                 str_repr: ")".to_string(),
-            };
+            });
         } else if initial[*offset] == ',' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::OrdinaryOperator,
                 str_repr: ",".to_string(),
-            };
+            });
         } else if initial[*offset] == '^' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::Caret,
                 str_repr: "^".to_string(),
-            };
+            });
         } else if initial[*offset] == '{' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::LeftBrace,
                 str_repr: "{".to_string(),
-            };
+            });
         } else if initial[*offset] == '}' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::RightBrace,
                 str_repr: "}".to_string(),
-            };
+            });
         } else if initial[*offset] == '<' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::OrdinaryOperator,
                 str_repr: "<".to_string(),
-            };
+            });
         } else if initial[*offset] == '>' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::OrdinaryOperator,
                 str_repr: ">".to_string(),
-            };
+            });
         } else if initial[*offset] == '=' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::OrdinaryOperator,
                 str_repr: "=".to_string(),
-            };
+            });
         } else if initial[*offset] == '_' {
             *offset += 1;
-            return Token {
+            return Some(Token {
                 kind: TokenType::Underscore,
                 str_repr: "_".to_string(),
-            };
+            });
         }
 
         if (initial[*offset] >= 'a' && initial[*offset] <= 'z')
@@ -138,10 +134,10 @@ pub mod tok {
 
             *offset += 1;
 
-            return Token {
+            return Some(Token {
                 kind: TokenType::Alphanumeric,
                 str_repr: st,
-            };
+            });
         }
 
         if initial[*offset] == '\\' {
@@ -175,10 +171,10 @@ pub mod tok {
             }
             *offset += i;
 
-            return Token {
+            return Some(Token {
                 kind: TokenType::BackslashFollowedByAlphanumerics,
                 str_repr: new_st,
-            };
+            });
         }
 
         eprintln!(
