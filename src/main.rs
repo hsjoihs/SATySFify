@@ -13,7 +13,7 @@ enum Stuff {
 }
 
 #[derive(Copy, Clone)]
-enum ParenKind {
+enum LeftParenKind {
     BareLeftParen,
     BareLeftBrace,
     BackslashLeft(BSLeftKind),
@@ -38,7 +38,7 @@ fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
 
 fn to_stuffs_(
     mut iter: &mut std::vec::IntoIter<tok::Token>,
-    paren_stack: &[ParenKind],
+    paren_stack: &[LeftParenKind],
 ) -> Result<(Vec<Stuff>, Option<BSRightKind>), String> {
     let mut res = Vec::new();
 
@@ -58,7 +58,7 @@ fn to_stuffs_(
                     match next_tok.kind {
                         tok::TokenType::LeftParen => {
                             let mut new_stack = paren_stack.to_owned();
-                            new_stack.push(ParenKind::BackslashLeft(BSLeftKind::LeftParen));
+                            new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftParen));
                             let (inner_stuffs, hopefully_something) =
                                 to_stuffs_(&mut iter, &*new_stack)?;
 
@@ -79,20 +79,14 @@ fn to_stuffs_(
                             None => {
                                 return Err("unmatched left brace".to_string());
                             }
-                            Some(ParenKind::BareLeftParen) => {
-                                return Err(
-                                    "`\\right)` encountered before a left paren was matched"
-                                        .to_string(),
-                                );
-                            }
-                            Some(ParenKind::BareLeftBrace) => {
-                                return Err(
-                                    "`\\right)` encontered before a left brace was matched"
-                                        .to_string(),
-                                );
-                            }
-                            Some(ParenKind::BackslashLeft(_)) => {
+                            Some(LeftParenKind::BackslashLeft(_)) => {
                                 return Ok((res, Some(BSRightKind::RightParen)));
+                            }
+                            Some(&x) => {
+                                return Err(format!(
+                                    "`\\right)` encountered before {} was matched",
+                                    x.msg()
+                                ));
                             }
                         },
                         _ => unimplemented!("unimplemented token found after `\\right`"),
@@ -104,7 +98,7 @@ fn to_stuffs_(
 
             tok::TokenType::LeftParen => {
                 let mut new_stack = paren_stack.to_owned();
-                new_stack.push(ParenKind::BareLeftParen);
+                new_stack.push(LeftParenKind::BareLeftParen);
                 let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
                 if hopefully_none.is_some() {
                     panic!("shouldn't happen");
@@ -117,7 +111,7 @@ fn to_stuffs_(
             }
             tok::TokenType::LeftBrace => {
                 let mut new_stack = paren_stack.to_owned();
-                new_stack.push(ParenKind::BareLeftBrace);
+                new_stack.push(LeftParenKind::BareLeftBrace);
                 let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
                 if hopefully_none.is_some() {
                     panic!("shouldn't happen");
@@ -125,37 +119,43 @@ fn to_stuffs_(
                 res.push(Stuff::Braced(inner_stuffs));
             }
             tok::TokenType::RightBrace => match paren_stack.last() {
-                None => return Err("unmatched left brace".to_string()),
-                Some(ParenKind::BareLeftParen) => {
-                    return Err(
-                        "right brace encountered before a left paren was matched".to_string()
-                    )
-                }
-                Some(ParenKind::BareLeftBrace) => {
+                None => return Err("unmatched right brace".to_string()),
+                Some(LeftParenKind::BareLeftBrace) => {
                     return Ok((res, None));
                 }
-                Some(ParenKind::BackslashLeft(BSLeftKind::LeftParen)) => {
-                    return Err("right brace encountered before `\\left(` was matched".to_string())
+                Some(&x) => {
+                    return Err(format!(
+                        "right brace encountered before {} was matched",
+                        x.msg()
+                    ))
                 }
             },
             tok::TokenType::RightParen => match paren_stack.last() {
-                None => return Err("unmatched left paren".to_string()),
-                Some(ParenKind::BareLeftBrace) => {
-                    return Err(
-                        "right paren encountered before a left brace was matched".to_string()
-                    )
-                }
-                Some(ParenKind::BareLeftParen) => {
+                None => return Err("unmatched right paren".to_string()),
+                Some(LeftParenKind::BareLeftParen) => {
                     return Ok((res, None));
                 }
-                Some(ParenKind::BackslashLeft(BSLeftKind::LeftParen)) => {
-                    return Err("right paren encountered before `\\left(` was matched".to_string())
+                Some(&x) => {
+                    return Err(format!(
+                        "right paren encountered before {} was matched",
+                        x.msg()
+                    ))
                 }
             },
         };
     }
 
     Ok((res, None))
+}
+
+impl LeftParenKind {
+    fn msg(&self) -> &'static str {
+        match self {
+            LeftParenKind::BareLeftBrace => "a left brace",
+            LeftParenKind::BackslashLeft(BSLeftKind::LeftParen) => "`\\left(`",
+            LeftParenKind::BareLeftParen => "a left paren",
+        }
+    }
 }
 
 fn print_expr_(stuffs: &[Stuff], indent: usize) {
