@@ -37,70 +37,44 @@ pub mod tok {
 
         tokens
     }
+    fn some_char_token(ch: char, kind: TokenType) -> Option<Token> {
+        Some(Token {
+            kind,
+            str_repr: ch.to_string(),
+        })
+    }
     fn get_token2(iter: &mut std::iter::Peekable<std::slice::Iter<'_, char>>) -> Option<Token> {
         match iter.next() {
             None => None,
-            Some(&ch) => {
-                if ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' {
+            Some(&ch) => match ch {
+                ' ' | '\t' | '\n' | '\r' => {
                     return get_token2(iter);
                 }
 
-                if ch == '+'
-                    || ch == '*'
-                    || ch == ','
-                    || ch == '.'
-                    || ch == '|'
-                    || ch == '/'
-                    || ch == '-'
-                    || ch == '<'
-                    || ch == '>'
-                    || ch == '='
-                {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: ch.to_string(),
-                    });
-                } else if ch == '(' {
-                    return Some(Token {
-                        kind: TokenType::LeftParen,
-                        str_repr: ch.to_string(),
-                    });
-                } else if ch == ')' {
-                    return Some(Token {
-                        kind: TokenType::RightParen,
-                        str_repr: ch.to_string(),
-                    });
-                } else if ch == '^' {
-                    return Some(Token {
-                        kind: TokenType::Caret,
-                        str_repr: ch.to_string(),
-                    });
-                } else if ch == '{' {
-                    return Some(Token {
-                        kind: TokenType::LeftBrace,
-                        str_repr: ch.to_string(),
-                    });
-                } else if ch == '}' {
-                    return Some(Token {
-                        kind: TokenType::RightBrace,
-                        str_repr: ch.to_string(),
-                    });
-                } else if ch == '_' {
-                    return Some(Token {
-                        kind: TokenType::Underscore,
-                        str_repr: "_".to_string(),
-                    });
+                '+' | '*' | ',' | '.' | '|' | '/' | '-' | '<' | '>' | '=' => {
+                    return some_char_token(ch, TokenType::OrdinaryOperator);
                 }
 
-                if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
-                {
-                    return Some(Token {
-                        kind: TokenType::Alphanumeric,
-                        str_repr: ch.to_string(),
-                    });
+                '(' => {
+                    return some_char_token(ch, TokenType::LeftParen);
+                }
+                ')' => {
+                    return some_char_token(ch, TokenType::RightParen);
+                }
+                '^' => {
+                    return some_char_token(ch, TokenType::Caret);
+                }
+                '{' => {
+                    return some_char_token(ch, TokenType::LeftBrace);
+                }
+                '}' => {
+                    return some_char_token(ch, TokenType::RightBrace);
+                }
+                '_' => {
+                    return some_char_token(ch, TokenType::Underscore);
                 }
 
-                if ch == '\\' {
+                '\\' => {
                     match iter.next() {
                         None => {
                             eprintln!("Found unexpected end of input after a backslash\n");
@@ -148,12 +122,21 @@ pub mod tok {
                     }
                 }
 
-                eprintln!(
-                    "Found unexpected character: '{}' ({})",
-                    ch as char, ch as i32
-                );
-                panic!();
-            }
+                _ => {
+                    if (ch >= 'a' && ch <= 'z')
+                        || (ch >= 'A' && ch <= 'Z')
+                        || (ch >= '0' && ch <= '9')
+                    {
+                        return some_char_token(ch, TokenType::Alphanumeric);
+                    }
+
+                    eprintln!(
+                        "Found unexpected character: '{}' ({})",
+                        ch as char, ch as i32
+                    );
+                    panic!();
+                }
+            },
         }
     }
 }
