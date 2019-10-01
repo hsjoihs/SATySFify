@@ -29,9 +29,9 @@ enum BSRightKind {
     RightParen,
 }
 
-fn to_stuffs(input: Vec<tok::Token>) -> Vec<Stuff> {
-    match to_stuffs_(&mut input.into_iter(), &Vec::new()) {
-        (ans, None) => ans,
+fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
+    match to_stuffs_(&mut input.into_iter(), &Vec::new())? {
+        (ans, None) => Ok(ans),
         _ => panic!("should not happen"),
     }
 }
@@ -39,7 +39,7 @@ fn to_stuffs(input: Vec<tok::Token>) -> Vec<Stuff> {
 fn to_stuffs_(
     mut iter: &mut std::vec::IntoIter<tok::Token>,
     paren_stack: &[ParenKind],
-) -> (Vec<Stuff>, Option<BSRightKind>) {
+) -> Result<(Vec<Stuff>, Option<BSRightKind>), String> {
     let mut res = Vec::new();
 
     while let Some(x) = iter.next() {
@@ -54,13 +54,13 @@ fn to_stuffs_(
                 if x.str_repr == "\\left" {
                     let next_tok = iter
                         .next()
-                        .expect("end of input encountered after `\\left`");
+                        .ok_or("end of input encountered after `\\left`")?;
                     match next_tok.kind {
                         tok::TokenType::LeftParen => {
                             let mut new_stack = paren_stack.to_owned();
                             new_stack.push(ParenKind::BackslashLeft(BSLeftKind::LeftParen));
                             let (inner_stuffs, hopefully_something) =
-                                to_stuffs_(&mut iter, &*new_stack);
+                                to_stuffs_(&mut iter, &*new_stack)?;
 
                             res.push(Stuff::LeftRightPair(
                                 BSLeftKind::LeftParen,
@@ -73,18 +73,26 @@ fn to_stuffs_(
                 } else if x.str_repr == "\\right" {
                     let next_tok = iter
                         .next()
-                        .expect("end of input encountered after `\\right`");
+                        .ok_or("end of input encountered after `\\right`")?;
                     match next_tok.kind {
                         tok::TokenType::RightParen => match paren_stack.last() {
-                            None => panic!("unmatched left brace"),
+                            None => {
+                                return Err("unmatched left brace".to_string());
+                            }
                             Some(ParenKind::BareLeftParen) => {
-                                panic!("`\\right)` encountered before a left paren was matched")
+                                return Err(
+                                    "`\\right)` encountered before a left paren was matched"
+                                        .to_string(),
+                                );
                             }
                             Some(ParenKind::BareLeftBrace) => {
-                                panic!("`\\right)` encontered before a left brace was matched");
+                                return Err(
+                                    "`\\right)` encontered before a left brace was matched"
+                                        .to_string(),
+                                );
                             }
                             Some(ParenKind::BackslashLeft(_)) => {
-                                return (res, Some(BSRightKind::RightParen));
+                                return Ok((res, Some(BSRightKind::RightParen)));
                             }
                         },
                         _ => unimplemented!("unimplemented token found after `\\right`"),
@@ -97,7 +105,7 @@ fn to_stuffs_(
             tok::TokenType::LeftParen => {
                 let mut new_stack = paren_stack.to_owned();
                 new_stack.push(ParenKind::BareLeftParen);
-                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack);
+                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
                 if hopefully_none.is_some() {
                     panic!("shouldn't happen");
                 }
@@ -110,40 +118,44 @@ fn to_stuffs_(
             tok::TokenType::LeftBrace => {
                 let mut new_stack = paren_stack.to_owned();
                 new_stack.push(ParenKind::BareLeftBrace);
-                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack);
+                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
                 if hopefully_none.is_some() {
                     panic!("shouldn't happen");
                 }
                 res.push(Stuff::Braced(inner_stuffs));
             }
             tok::TokenType::RightBrace => match paren_stack.last() {
-                None => panic!("unmatched left brace"),
+                None => return Err("unmatched left brace".to_string()),
                 Some(ParenKind::BareLeftParen) => {
-                    panic!("right brace encountered before a left paren was matched")
+                    return Err(
+                        "right brace encountered before a left paren was matched".to_string()
+                    )
                 }
                 Some(ParenKind::BareLeftBrace) => {
-                    return (res, None);
+                    return Ok((res, None));
                 }
                 Some(ParenKind::BackslashLeft(BSLeftKind::LeftParen)) => {
-                    panic!("right brace encountered before `\\left(` was matched")
+                    return Err("right brace encountered before `\\left(` was matched".to_string())
                 }
             },
             tok::TokenType::RightParen => match paren_stack.last() {
-                None => panic!("unmatched left paren"),
+                None => return Err("unmatched left paren".to_string()),
                 Some(ParenKind::BareLeftBrace) => {
-                    panic!("right paren encountered before a left brace was matched")
+                    return Err(
+                        "right paren encountered before a left brace was matched".to_string()
+                    )
                 }
                 Some(ParenKind::BareLeftParen) => {
-                    return (res, None);
+                    return Ok((res, None));
                 }
                 Some(ParenKind::BackslashLeft(BSLeftKind::LeftParen)) => {
-                    panic!("right paren encountered before `\\left(` was matched")
+                    return Err("right paren encountered before `\\left(` was matched".to_string())
                 }
             },
         };
     }
 
-    (res, None)
+    Ok((res, None))
 }
 
 fn print_expr_(stuffs: &[Stuff], indent: usize) {
@@ -167,13 +179,13 @@ fn print_expr_(stuffs: &[Stuff], indent: usize) {
     }
 }
 
-fn main() {
+fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() != 2 {
         panic!("Incorrect number of arguments\n");
     }
-    let tokens = tok::to_tokens(&args[1]).unwrap();
+    let tokens = tok::to_tokens(&args[1])?;
 
     for lib in &["stdjabook", "code", "itemize", "tabular", "math"] {
         println!("@require: {}", lib);
@@ -188,11 +200,13 @@ fn main() {
     println!("  +section{{}}<");
     println!("    +math(${{");
 
-    let stuffs = to_stuffs(tokens);
+    let stuffs = to_stuffs(tokens)?;
     print_expr_(&stuffs, 6);
     eprintln!("{:?}", stuffs);
 
     println!("    }});");
     println!("  >");
     println!(">");
+
+    Ok(())
 }
