@@ -77,7 +77,7 @@ fn to_stuffs_(
                     match next_tok.kind {
                         tok::TokenType::RightParen => match paren_stack.last() {
                             None => {
-                                return Err("unmatched left brace".to_string());
+                                return Err("unmatched `\\right)`".to_string());
                             }
                             Some(LeftParenKind::BackslashLeft(_)) => {
                                 return Ok((res, Some(BSRightKind::RightParen)));
@@ -145,7 +145,15 @@ fn to_stuffs_(
         };
     }
 
-    Ok((res, None))
+    match paren_stack.last() {
+        None => Ok((res, None)),
+        Some(&x) => {
+            return Err(format!(
+                "end of input encountered before {} was matched",
+                x.msg()
+            ))
+        }
+    }
 }
 
 impl LeftParenKind {
@@ -183,7 +191,7 @@ fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
 
     if args.len() != 2 {
-        panic!("Incorrect number of arguments\n");
+        return Err("Incorrect number of arguments\n".to_string());
     }
     let tokens = tok::to_tokens(&args[1])?;
 
