@@ -32,7 +32,7 @@ enum BSRightKind {
 fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
     match to_stuffs_(&mut input.into_iter(), &Vec::new())? {
         (ans, None) => Ok(ans),
-        _ => panic!("should not happen"),
+        _ => unreachable!(),
     }
 }
 
@@ -101,7 +101,7 @@ fn to_stuffs_(
                 new_stack.push(LeftParenKind::BareLeftParen);
                 let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
                 if hopefully_none.is_some() {
-                    panic!("shouldn't happen");
+                    unreachable!();
                 }
                 res.push(Stuff::Simple(tok::Token {
                     kind: tok::TokenType::BackslashFollowedByAlphanumerics,
@@ -114,7 +114,7 @@ fn to_stuffs_(
                 new_stack.push(LeftParenKind::BareLeftBrace);
                 let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
                 if hopefully_none.is_some() {
-                    panic!("shouldn't happen");
+                    unreachable!();
                 }
                 res.push(Stuff::Braced(inner_stuffs));
             }
