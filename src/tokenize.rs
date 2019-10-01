@@ -47,33 +47,17 @@ pub mod tok {
         match iter.next() {
             None => None,
             Some(&ch) => match ch {
-                ' ' | '\t' | '\n' | '\r' => {
-                    return get_token2(iter);
-                }
-
+                ' ' | '\t' | '\n' | '\r' => get_token2(iter),
+                '(' => some_char_token(ch, TokenType::LeftParen),
+                ')' => some_char_token(ch, TokenType::RightParen),
+                '^' => some_char_token(ch, TokenType::Caret),
+                '{' => some_char_token(ch, TokenType::LeftBrace),
+                '}' => some_char_token(ch, TokenType::RightBrace),
+                '_' => some_char_token(ch, TokenType::Underscore),
+                'a'..='z' | 'A'..='Z' | '0'..='9' => some_char_token(ch, TokenType::Alphanumeric),
                 '+' | '*' | ',' | '.' | '|' | '/' | '-' | '<' | '>' | '=' => {
-                    return some_char_token(ch, TokenType::OrdinaryOperator);
+                    some_char_token(ch, TokenType::OrdinaryOperator)
                 }
-
-                '(' => {
-                    return some_char_token(ch, TokenType::LeftParen);
-                }
-                ')' => {
-                    return some_char_token(ch, TokenType::RightParen);
-                }
-                '^' => {
-                    return some_char_token(ch, TokenType::Caret);
-                }
-                '{' => {
-                    return some_char_token(ch, TokenType::LeftBrace);
-                }
-                '}' => {
-                    return some_char_token(ch, TokenType::RightBrace);
-                }
-                '_' => {
-                    return some_char_token(ch, TokenType::Underscore);
-                }
-
                 '\\' => {
                     match iter.next() {
                         None => {
@@ -114,22 +98,15 @@ pub mod tok {
                                 }
                             }
 
-                            return Some(Token {
+                            Some(Token {
                                 kind: TokenType::BackslashFollowedByAlphanumerics,
                                 str_repr: new_st,
-                            });
+                            })
                         }
                     }
                 }
 
                 _ => {
-                    if (ch >= 'a' && ch <= 'z')
-                        || (ch >= 'A' && ch <= 'Z')
-                        || (ch >= '0' && ch <= '9')
-                    {
-                        return some_char_token(ch, TokenType::Alphanumeric);
-                    }
-
                     eprintln!(
                         "Found unexpected character: '{}' ({})",
                         ch as char, ch as i32
