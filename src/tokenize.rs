@@ -19,16 +19,16 @@ pub mod tok {
         pub kind: TokenType,
         pub str_repr: String,
     }
-    pub fn to_tokens(input: &str) -> Vec<Token> {
+    pub fn to_tokens(input: &str) -> Result<Vec<Token>, String> {
         let mut iter = input.clone().chars().peekable();
 
         let mut tokens = Vec::new();
-        while let Some(t) = get_token2(&mut iter) {
+        while let Some(t) = get_token2(&mut iter)? {
             eprintln!("{}", t.str_repr);
             tokens.push(t);
         }
 
-        tokens
+        Ok(tokens)
     }
     fn some_char_token(ch: char, kind: TokenType) -> Option<Token> {
         Some(Token {
@@ -36,11 +36,13 @@ pub mod tok {
             str_repr: ch.to_string(),
         })
     }
-    fn get_token2(iter: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Option<Token> {
-        match iter.next() {
+    fn get_token2(
+        iter: &mut std::iter::Peekable<std::str::Chars<'_>>,
+    ) -> Result<Option<Token>, String> {
+        let opt_tok = match iter.next() {
             None => None,
             Some(ch) => match ch {
-                ' ' | '\t' | '\n' | '\r' => get_token2(iter),
+                ' ' | '\t' | '\n' | '\r' => get_token2(iter)?,
                 '(' => some_char_token(ch, TokenType::LeftParen),
                 ')' => some_char_token(ch, TokenType::RightParen),
                 '^' => some_char_token(ch, TokenType::Caret),
@@ -54,16 +56,15 @@ pub mod tok {
                 '\\' => {
                     let after_backslash = iter
                         .next()
-                        .expect("Found unexpected end of input after a backslash\n");
+                        .ok_or("Found unexpected end of input after a backslash\n")?;
 
                     if !((after_backslash >= 'a' && after_backslash <= 'z')
                         || (after_backslash >= 'A' && after_backslash <= 'Z'))
                     {
-                        eprintln!(
+                        Err(format!(
                             "Found unexpected character after a backslash: '{}' ({})\n",
                             after_backslash as char, after_backslash as i32
-                        );
-                        panic!();
+                        ))?;
                     }
                     let mut new_st = "\\".to_string();
                     new_st.push(after_backslash);
@@ -85,14 +86,12 @@ pub mod tok {
                     })
                 }
 
-                _ => {
-                    eprintln!(
-                        "Found unexpected character: '{}' ({})",
-                        ch as char, ch as i32
-                    );
-                    panic!();
-                }
+                _ => Err(format!(
+                    "Found unexpected character: '{}' ({})",
+                    ch as char, ch as i32
+                ))?,
             },
-        }
+        };
+        Ok(opt_tok)
     }
 }

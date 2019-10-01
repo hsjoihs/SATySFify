@@ -98,7 +98,7 @@ fn main() {
     if args.len() != 2 {
         panic!("Incorrect number of arguments\n");
     }
-    let tokens = tok::to_tokens(&args[1]);
+    let tokens = tok::to_tokens(&args[1]).unwrap();
 
     for lib in &["stdjabook", "code", "itemize", "tabular", "math"] {
         println!("@require: {}", lib);
