@@ -45,80 +45,45 @@ pub mod tok {
                     return get_token2(iter);
                 }
 
-                if ch == '+' {
+                if ch == '+'
+                    || ch == '*'
+                    || ch == ','
+                    || ch == '.'
+                    || ch == '|'
+                    || ch == '/'
+                    || ch == '-'
+                    || ch == '<'
+                    || ch == '>'
+                    || ch == '='
+                {
                     return Some(Token {
                         kind: TokenType::OrdinaryOperator,
-                        str_repr: "+".to_string(),
-                    });
-                } else if ch == '*' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: "*".to_string(),
+                        str_repr: ch.to_string(),
                     });
                 } else if ch == '(' {
                     return Some(Token {
                         kind: TokenType::LeftParen,
-                        str_repr: "(".to_string(),
+                        str_repr: ch.to_string(),
                     });
                 } else if ch == ')' {
                     return Some(Token {
                         kind: TokenType::RightParen,
-                        str_repr: ")".to_string(),
-                    });
-                } else if ch == ',' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: ",".to_string(),
-                    });
-                } else if ch == '.' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: ".".to_string(),
-                    });
-                } else if ch == '|' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: "|".to_string(),
-                    });
-                } else if ch == '/' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: "/".to_string(),
+                        str_repr: ch.to_string(),
                     });
                 } else if ch == '^' {
                     return Some(Token {
                         kind: TokenType::Caret,
-                        str_repr: "^".to_string(),
+                        str_repr: ch.to_string(),
                     });
                 } else if ch == '{' {
                     return Some(Token {
                         kind: TokenType::LeftBrace,
-                        str_repr: "{".to_string(),
+                        str_repr: ch.to_string(),
                     });
                 } else if ch == '}' {
                     return Some(Token {
                         kind: TokenType::RightBrace,
-                        str_repr: "}".to_string(),
-                    });
-                } else if ch == '-' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: "-".to_string(),
-                    });
-                } else if ch == '<' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: "<".to_string(),
-                    });
-                } else if ch == '>' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: ">".to_string(),
-                    });
-                } else if ch == '=' {
-                    return Some(Token {
-                        kind: TokenType::OrdinaryOperator,
-                        str_repr: "=".to_string(),
+                        str_repr: ch.to_string(),
                     });
                 } else if ch == '_' {
                     return Some(Token {
@@ -129,12 +94,9 @@ pub mod tok {
 
                 if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')
                 {
-                    let mut st = String::from("");
-                    st.push(ch as char);
-
                     return Some(Token {
                         kind: TokenType::Alphanumeric,
-                        str_repr: st,
+                        str_repr: ch.to_string(),
                     });
                 }
 
