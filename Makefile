@@ -27,3 +27,9 @@ all:
 	satysfi test/test012.saty
 	./target/debug/SATySFify '\int_b^c a(x-b)(x-c) dx = -\frac{a}{6}(c-b)^3' > test/test013.saty
 	satysfi test/test013.saty
+	./target/debug/SATySFify '\frac{1}{2\pi}\left(\int_{-1}^{0}(1+x)e^{ikx}dx+\int_{0}^{1}(1-x)e^{ikx}dx\right)' > test/test014.saty
+	satysfi test/test014.saty
+	./target/debug/SATySFify '-2ab\left(1+m^2\right) \left( \frac{ 2\sin  \theta\cos\theta}{L}-\frac{ 2abm \sin^3 \theta}{L^2} \right) + \frac{dm}{d\theta} \left(-\frac{4abm \sin^2 \theta}{L}+\cos\theta\right)-m\sin\theta -\cos \theta' > test/test015.saty
+	satysfi test/test015.saty
+	./target/debug/SATySFify '\frac{2}{ab}\frac{d^3}{d\theta^3} S_{true} = -2ab\left(1+m^2\right) \left( \frac{ 2\sin  \theta\cos\theta}{L}-\frac{ 2abm \sin^3 \theta}{L^2} \right) + \frac{dm}{d\theta} \left(-\frac{4abm \sin^2 \theta}{L}+\cos\theta\right)-m\sin\theta -\cos \theta' > test/test016.saty
+	satysfi test/test016.saty
