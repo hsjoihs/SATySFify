@@ -20,7 +20,7 @@ pub mod tok {
         pub str_repr: String,
     }
     pub fn to_tokens(input: &str) -> Result<Vec<Token>, String> {
-        let mut iter = input.clone().chars().peekable();
+        let mut iter = input.chars().peekable();
 
         let mut tokens = Vec::new();
         while let Some(t) = get_token2(&mut iter)? {
@@ -61,10 +61,10 @@ pub mod tok {
                     if !((after_backslash >= 'a' && after_backslash <= 'z')
                         || (after_backslash >= 'A' && after_backslash <= 'Z'))
                     {
-                        Err(format!(
+                        return Err(format!(
                             "Found unexpected character after a backslash: '{}' ({})\n",
                             after_backslash as char, after_backslash as i32
-                        ))?;
+                        ));
                     }
                     let mut new_st = "\\".to_string();
                     new_st.push(after_backslash);
@@ -86,10 +86,12 @@ pub mod tok {
                     })
                 }
 
-                _ => Err(format!(
-                    "Found unexpected character: '{}' ({})",
-                    ch as char, ch as i32
-                ))?,
+                _ => {
+                    return Err(format!(
+                        "Found unexpected character: '{}' ({})",
+                        ch as char, ch as i32
+                    ))
+                }
             },
         };
         Ok(opt_tok)

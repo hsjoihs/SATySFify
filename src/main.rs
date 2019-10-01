@@ -98,7 +98,7 @@ fn to_stuffs_(
                 let mut new_stack = paren_stack.to_owned();
                 new_stack.push(ParenKind::BareLeftParen);
                 let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack);
-                if let Some(_) = hopefully_none {
+                if hopefully_none.is_some() {
                     panic!("shouldn't happen");
                 }
                 res.push(Stuff::Simple(tok::Token {
@@ -111,7 +111,7 @@ fn to_stuffs_(
                 let mut new_stack = paren_stack.to_owned();
                 new_stack.push(ParenKind::BareLeftBrace);
                 let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack);
-                if let Some(_) = hopefully_none {
+                if hopefully_none.is_some() {
                     panic!("shouldn't happen");
                 }
                 res.push(Stuff::Braced(inner_stuffs));
