@@ -18,37 +18,29 @@ enum ParenKind {
 }
 
 fn to_stuffs(input: Vec<tok::Token>) -> Vec<Stuff> {
-    to_stuffs_(&mut input.into_iter(), Vec::new())
+    to_stuffs_(&mut input.into_iter(), &Vec::new())
 }
 
 fn to_stuffs_(
     mut iter: &mut std::vec::IntoIter<tok::Token>,
-    paren_stack: Vec<ParenKind>,
+    paren_stack: &[ParenKind],
 ) -> Vec<Stuff> {
     let mut res = Vec::new();
 
     while let Some(x) = iter.next() {
         match x.kind {
-            tok::TokenType::Alphanumeric => {
-                res.push(Stuff::Simple(x));
-            }
-            tok::TokenType::OrdinaryOperator => {
-                res.push(Stuff::Simple(x));
-            }
-            tok::TokenType::Underscore => {
-                res.push(Stuff::Simple(x));
-            }
-            tok::TokenType::Caret => {
-                res.push(Stuff::Simple(x));
-            }
-            tok::TokenType::BackslashFollowedByAlphanumerics => {
+            tok::TokenType::Alphanumeric
+            | tok::TokenType::OrdinaryOperator
+            | tok::TokenType::Underscore
+            | tok::TokenType::Caret
+            | tok::TokenType::BackslashFollowedByAlphanumerics => {
                 res.push(Stuff::Simple(x));
             }
 
             tok::TokenType::LeftParen => {
-                let mut new_stack = paren_stack.clone();
+                let mut new_stack = paren_stack.to_owned();
                 new_stack.push(ParenKind::BareLeftParen);
-                let inner_stuffs = to_stuffs_(&mut iter, new_stack);
+                let inner_stuffs = to_stuffs_(&mut iter, &*new_stack);
                 res.push(Stuff::Simple(tok::Token {
                     kind: tok::TokenType::BackslashFollowedByAlphanumerics,
                     str_repr: "\\paren".to_string(),
@@ -56,9 +48,9 @@ fn to_stuffs_(
                 res.push(Stuff::Braced(inner_stuffs));
             }
             tok::TokenType::LeftBrace => {
-                let mut new_stack = paren_stack.clone();
+                let mut new_stack = paren_stack.to_owned();
                 new_stack.push(ParenKind::BareLeftBrace);
-                let inner_stuffs = to_stuffs_(&mut iter, new_stack);
+                let inner_stuffs = to_stuffs_(&mut iter, &*new_stack);
                 res.push(Stuff::Braced(inner_stuffs));
             }
             tok::TokenType::RightBrace => match paren_stack.last() {
