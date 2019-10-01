@@ -19,8 +19,8 @@ pub mod tok {
         pub kind: TokenType,
         pub str_repr: String,
     }
-    pub fn to_tokens(input: &[char]) -> Vec<Token> {
-        let mut iter = input.iter().peekable();
+    pub fn to_tokens(input: &str) -> Vec<Token> {
+        let mut iter = input.clone().chars().peekable();
 
         let mut tokens = Vec::new();
         while let Some(t) = get_token2(&mut iter) {
@@ -36,10 +36,10 @@ pub mod tok {
             str_repr: ch.to_string(),
         })
     }
-    fn get_token2(iter: &mut std::iter::Peekable<std::slice::Iter<'_, char>>) -> Option<Token> {
+    fn get_token2(iter: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Option<Token> {
         match iter.next() {
             None => None,
-            Some(&ch) => match ch {
+            Some(ch) => match ch {
                 ' ' | '\t' | '\n' | '\r' => get_token2(iter),
                 '(' => some_char_token(ch, TokenType::LeftParen),
                 ')' => some_char_token(ch, TokenType::RightParen),
@@ -52,7 +52,7 @@ pub mod tok {
                     some_char_token(ch, TokenType::OrdinaryOperator)
                 }
                 '\\' => {
-                    let after_backslash = *iter
+                    let after_backslash = iter
                         .next()
                         .expect("Found unexpected end of input after a backslash\n");
 
@@ -68,7 +68,7 @@ pub mod tok {
                     let mut new_st = "\\".to_string();
                     new_st.push(after_backslash);
 
-                    while let Some(&&c) = iter.peek() {
+                    while let Some(&c) = iter.peek() {
                         if !((c >= 'a' && c <= 'z')
                             || (c >= 'A' && c <= 'Z')
                             || (c >= '0' && c <= '9'))

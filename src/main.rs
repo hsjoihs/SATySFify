@@ -98,8 +98,7 @@ fn main() {
     if args.len() != 2 {
         panic!("Incorrect number of arguments\n");
     }
-    let input: Vec<char> = args[1].clone().chars().collect();
-    let tokens = tok::to_tokens(&input);
+    let tokens = tok::to_tokens(&args[1]);
 
     for lib in &["stdjabook", "code", "itemize", "tabular", "math"] {
         println!("@require: {}", lib);
