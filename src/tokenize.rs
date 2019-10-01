@@ -23,16 +23,9 @@ pub mod tok {
         let mut iter = input.iter().peekable();
 
         let mut tokens = Vec::new();
-        loop {
-            match get_token2(&mut iter) {
-                None => {
-                    break;
-                }
-                Some(t) => {
-                    eprintln!("{}", t.str_repr);
-                    tokens.push(t);
-                }
-            }
+        while let Some(t) = get_token2(&mut iter) {
+            eprintln!("{}", t.str_repr);
+            tokens.push(t);
         }
 
         tokens
