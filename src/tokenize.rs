@@ -58,53 +58,44 @@ pub mod tok {
                 '+' | '*' | ',' | '.' | '|' | '/' | '-' | '<' | '>' | '=' => {
                     some_char_token(ch, TokenType::OrdinaryOperator)
                 }
-                '\\' => {
-                    match iter.next() {
-                        None => {
-                            eprintln!("Found unexpected end of input after a backslash\n");
+                '\\' => match iter.next() {
+                    None => {
+                        eprintln!("Found unexpected end of input after a backslash\n");
+                        panic!();
+                    }
+                    Some(&after_backslash) => {
+                        // now on 1 + *offset
+
+                        if !((after_backslash >= 'a' && after_backslash <= 'z')
+                            || (after_backslash >= 'A' && after_backslash <= 'Z'))
+                        {
+                            eprintln!(
+                                "Found unexpected character after a backslash: '{}' ({})\n",
+                                after_backslash as char, after_backslash as i32
+                            );
                             panic!();
                         }
-                        Some(&after_backslash) => {
-                            // now on 1 + *offset
+                        let mut new_st = String::from("");
+                        new_st.push(ch);
+                        new_st.push(after_backslash);
 
-                            if !((after_backslash >= 'a' && after_backslash <= 'z')
-                                || (after_backslash >= 'A' && after_backslash <= 'Z'))
+                        while let Some(&&c) = iter.peek() {
+                            if !((c >= 'a' && c <= 'z')
+                                || (c >= 'A' && c <= 'Z')
+                                || (c >= '0' && c <= '9'))
                             {
-                                eprintln!(
-                                    "Found unexpected character after a backslash: '{}' ({})\n",
-                                    after_backslash as char, after_backslash as i32
-                                );
-                                panic!();
+                                break;
                             }
-                            let mut new_st = String::from("");
-                            new_st.push(ch);
-                            new_st.push(after_backslash);
-
-                            loop {
-                                match iter.peek() {
-                                    None => {
-                                        break;
-                                    }
-                                    Some(&&c) => {
-                                        if !((c >= 'a' && c <= 'z')
-                                            || (c >= 'A' && c <= 'Z')
-                                            || (c >= '0' && c <= '9'))
-                                        {
-                                            break;
-                                        }
-                                        new_st.push(c);
-                                        iter.next();
-                                    }
-                                }
-                            }
-
-                            Some(Token {
-                                kind: TokenType::BackslashFollowedByAlphanumerics,
-                                str_repr: new_st,
-                            })
+                            new_st.push(c);
+                            iter.next();
                         }
+
+                        Some(Token {
+                            kind: TokenType::BackslashFollowedByAlphanumerics,
+                            str_repr: new_st,
+                        })
                     }
-                }
+                },
 
                 _ => {
                     eprintln!(
