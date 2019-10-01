@@ -1,0 +1,54 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      \int
+      _
+      b
+      ^
+      c
+      a
+      \paren
+      {
+        x
+        -
+        b
+      }
+      \paren
+      {
+        x
+        -
+        c
+      }
+      d
+      x
+      =
+      -
+      \frac
+      {
+        a
+      }
+      {
+        6
+      }
+      \paren
+      {
+        c
+        -
+        b
+      }
+      ^
+      3
+    });
+  >
+>

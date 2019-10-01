@@ -25,3 +25,5 @@ all:
 	satysfi test/test011.saty
 	./target/debug/SATySFify '\frac{4}{\pi}\int _0^{\pi/2} \sin((2n-1)x) (\sin x)^{b} dx' > test/test012.saty
 	satysfi test/test012.saty
+	./target/debug/SATySFify '\int_b^c a(x-b)(x-c) dx = -\frac{a}{6}(c-b)^3' > test/test013.saty
+	satysfi test/test013.saty
