@@ -33,3 +33,5 @@ all:
 	satysfi test/test015.saty
 	./target/debug/SATySFify '\frac{2}{ab}\frac{d^3}{d\theta^3} S_{true} = -2ab\left(1+m^2\right) \left( \frac{ 2\sin  \theta\cos\theta}{L}-\frac{ 2abm \sin^3 \theta}{L^2} \right) + \frac{dm}{d\theta} \left(-\frac{4abm \sin^2 \theta}{L}+\cos\theta\right)-m\sin\theta -\cos \theta' > test/test016.saty
 	satysfi test/test016.saty
+	./target/debug/SATySFify '\sin2' > test/test017.saty
+	satysfi test/test017.saty

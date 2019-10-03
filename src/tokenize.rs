@@ -70,10 +70,7 @@ pub mod tok {
                     new_st.push(after_backslash);
 
                     while let Some(&c) = iter.peek() {
-                        if !((c >= 'a' && c <= 'z')
-                            || (c >= 'A' && c <= 'Z')
-                            || (c >= '0' && c <= '9'))
-                        {
+                        if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
                             break;
                         }
                         new_st.push(c);
