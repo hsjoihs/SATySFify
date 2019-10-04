@@ -1,0 +1,34 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      1
+      0
+      7
+      \leq
+      2
+      \paren
+      {
+        X
+        +
+        Y
+        +
+        Z
+      }
+      \leq
+      1
+      1
+      0
+    });
+  >
+>

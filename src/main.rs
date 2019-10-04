@@ -1,5 +1,9 @@
 extern crate libc;
+extern crate termion;
+
+use std::collections::HashMap;
 use std::env;
+use termion::{color, style};
 
 mod tokenize;
 
@@ -170,7 +174,18 @@ fn print_expr_(stuffs: &[Stuff], indent: usize) {
     for st in stuffs {
         match st {
             Stuff::Simple(t) => {
-                println!("{:indent$}{}", "", t.str_repr, indent = indent);
+                if t.str_repr == "\\le" {
+                    println!("{:indent$}{}", "", "\\leq", indent = indent);
+                } else if t.str_repr == "\\dots" {
+                    eprintln!("{}{}`\\dots` detected; converting it into `\\ldots` (you might want to fix this) {}{}", 
+                    color::Fg(color::Red),
+                    style::Bold,
+                    style::Reset,
+                    color::Fg(color::Reset));
+                    println!("{:indent$}{}", "", "\\ldots", indent = indent);
+                } else {
+                    println!("{:indent$}{}", "", t.str_repr, indent = indent);
+                }
             }
             Stuff::Braced(vec) => {
                 println!("{:indent$}{{", "", indent = indent);
@@ -187,6 +202,33 @@ fn print_expr_(stuffs: &[Stuff], indent: usize) {
     }
 }
 
+use std::collections::HashSet;
+
+fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
+    let mut defs = HashSet::new();
+    for st in stuffs {
+        match st {
+            Stuff::Simple(t) => {
+                defs.insert(t.str_repr.clone());
+            }
+            Stuff::Braced(vec) => {
+                let internal = get_what_to_activate(vec);
+                for k in &internal {
+                    defs.insert(k.to_string());
+                }
+            }
+            Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightParen) => {
+                let internal = get_what_to_activate(vec);
+                for k in &internal {
+                    defs.insert(k.to_string());
+                }
+            }
+        }
+    }
+    eprintln!("{:?}", defs);
+    defs
+}
+
 fn main() -> Result<(), String> {
     let args: Vec<String> = env::args().collect();
 
@@ -194,11 +236,29 @@ fn main() -> Result<(), String> {
         return Err("Incorrect number of arguments\n".to_string());
     }
     let tokens = tok::to_tokens(&args[1])?;
+    let stuffs = to_stuffs(tokens)?;
 
     for lib in &["stdjabook", "code", "itemize", "tabular", "math"] {
         println!("@require: {}", lib);
     }
     println!();
+
+    let on_the_fly: HashMap<String, &str> = [(
+        "\\hbar".to_string(),
+        "let-math \\hbar = math-char MathOrd `ℏ` in ",
+    )]
+    .iter()
+    .cloned()
+    .collect();
+
+    let what_to_activate = get_what_to_activate(&stuffs);
+
+    for (key, code) in &on_the_fly {
+        if what_to_activate.get(key).is_some() {
+            println!("{}", code);
+        }
+    }
+
     println!("document (|");
     println!("  title = {{}};");
     println!("  author = {{}};");
@@ -208,7 +268,6 @@ fn main() -> Result<(), String> {
     println!("  +section{{}}<");
     println!("    +math(${{");
 
-    let stuffs = to_stuffs(tokens)?;
     print_expr_(&stuffs, 6);
     eprintln!("{:?}", stuffs);
 

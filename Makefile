@@ -35,3 +35,7 @@ all:
 	satysfi test/test016.saty
 	./target/debug/SATySFify '\sin2' > test/test017.saty
 	satysfi test/test017.saty
+	./target/debug/SATySFify '107\le2(X+Y+Z)\le110' > test/test018.saty
+	satysfi test/test018.saty
+	./target/debug/SATySFify 'L^2\psi = \left(x\frac{\hbar}{i}\partial_y - y\frac{\hbar}{i}\partial_x\right)\left(x\frac{\hbar}{i}\partial_y - y\frac{\hbar}{i}\partial_x\right)\psi + \dots' > test/test019.saty
+	satysfi test/test019.saty
