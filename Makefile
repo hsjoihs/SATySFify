@@ -45,3 +45,5 @@ all:
 	satysfi test/test021.saty
 	./target/debug/SATySFify '\left[ L\psi\right)^2' > test/test022.saty
 	satysfi test/test022.saty
+	./target/debug/SATySFify 'F[f(x)] = \frac{1}{2\pi}\left(\int_{-1}^{0}(1+x)e^{ikx}dx+\int_{0}^{1}(1-x)e^{ikx}dx\right)' > test/test023.saty
+	satysfi test/test023.saty
