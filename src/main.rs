@@ -14,14 +14,14 @@ fn main() -> Result<(), String> {
     if args.len() != 2 {
         return Err("Incorrect number of arguments\n".to_string());
     }
-    print(
+    print_satysfi(
         &vec!["stdjabook", "code", "itemize", "tabular", "math"],
         &args[1],
         6,
     )
 }
 
-fn print(libs: &[&str], input: &str, indent: usize) -> Result<(), String> {
+fn print_satysfi(libs: &[&str], input: &str, indent: usize) -> Result<(), String> {
     let tokens = tok::to_tokens(&input)?;
     let math = math::to_math(tokens)?;
 
