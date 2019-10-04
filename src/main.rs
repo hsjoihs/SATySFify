@@ -151,17 +151,15 @@ fn to_stuffs_(
 
     match paren_stack.last() {
         None => Ok((res, None)),
-        Some(&x) => {
-            return Err(format!(
-                "end of input encountered before {} was matched",
-                x.msg()
-            ))
-        }
+        Some(&x) => Err(format!(
+            "end of input encountered before {} was matched",
+            x.msg()
+        )),
     }
 }
 
 impl LeftParenKind {
-    fn msg(&self) -> &'static str {
+    fn msg(self) -> &'static str {
         match self {
             LeftParenKind::BareLeftBrace => "a left brace",
             LeftParenKind::BackslashLeft(BSLeftKind::LeftParen) => "`\\left(`",
@@ -175,14 +173,14 @@ fn print_expr_(stuffs: &[Stuff], indent: usize) {
         match st {
             Stuff::Simple(t) => {
                 if t.str_repr == "\\le" {
-                    println!("{:indent$}{}", "", "\\leq", indent = indent);
+                    println!("{:indent$}\\leq", "", indent = indent);
                 } else if t.str_repr == "\\dots" {
                     eprintln!("{}{}`\\dots` detected; converting it into `\\ldots` (you might want to fix this) {}{}", 
                     color::Fg(color::Red),
                     style::Bold,
                     style::Reset,
                     color::Fg(color::Reset));
-                    println!("{:indent$}{}", "", "\\ldots", indent = indent);
+                    println!("{:indent$}\\ldots", "", indent = indent);
                 } else {
                     println!("{:indent$}{}", "", t.str_repr, indent = indent);
                 }
