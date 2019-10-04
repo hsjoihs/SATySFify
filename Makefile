@@ -47,3 +47,8 @@ all:
 	satysfi test/test022.saty
 	./target/debug/SATySFify 'F[f(x)] = \frac{1}{2\pi}\left(\int_{-1}^{0}(1+x)e^{ikx}dx+\int_{0}^{1}(1-x)e^{ikx}dx\right)' > test/test023.saty
 	satysfi test/test023.saty
+	./target/debug/SATySFify 'n(AB+BC) = 2n \sqrt{l^2\tan^2v+l^2} = \frac{2nl}{\cos v}' > test/test024.saty
+	satysfi test/test024.saty
+	./target/debug/SATySFify $$'n(AB+BC)-DC\' = \\frac{2nl}{\\cos v} -2nl \\tan v\\sin v' > test/test025.saty
+	satysfi test/test025.saty
+

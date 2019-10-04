@@ -1,0 +1,50 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+let-math \satysfifi-internal-prime = math-char MathOrd `′` in 
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      n
+      \paren
+      {
+        A
+        B
+        +
+        B
+        C
+      }
+      -
+      D
+      C
+      \satysfifi-internal-prime
+      =
+      \frac
+      {
+        2
+        n
+        l
+      }
+      {
+        \cos
+        v
+      }
+      -
+      2
+      n
+      l
+      \tan
+      v
+      \sin
+      v
+    });
+  >
+>

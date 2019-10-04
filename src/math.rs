@@ -38,10 +38,15 @@ pub fn activated_math_addons(math: &Math) -> Vec<&str> {
     let addon_defs: HashMap<String, &str> = [(
         "\\hbar".to_string(),
         "let-math \\hbar = math-char MathOrd `ℏ` in ",
-    ), ("\\satysfifi-internal-paren-left-sqbracket-right".to_string(),
+    ), (
+        "\\satysfifi-internal-paren-left-sqbracket-right".to_string(),
      "let-math \\satysfifi-internal-paren-left-sqbracket-right  = math-paren Math.paren-left Math.sqbracket-right in "
-    ), ("\\satysfifi-internal-sqbracket-left-paren-right".to_string(),
+    ), (
+        "\\satysfifi-internal-sqbracket-left-paren-right".to_string(),
      "let-math \\satysfifi-internal-sqbracket-left-paren-right  = math-paren Math.sqbracket-left Math.paren-right in "
+    ), (
+        "\\satysfifi-internal-prime".to_string(),
+        "let-math \\satysfifi-internal-prime = math-char MathOrd `′` in "
     )]
     .iter()
     .cloned()

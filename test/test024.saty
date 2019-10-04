@@ -1,0 +1,54 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      n
+      \paren
+      {
+        A
+        B
+        +
+        B
+        C
+      }
+      =
+      2
+      n
+      \sqrt
+      {
+        l
+        ^
+        2
+        \tan
+        ^
+        2
+        v
+        +
+        l
+        ^
+        2
+      }
+      =
+      \frac
+      {
+        2
+        n
+        l
+      }
+      {
+        \cos
+        v
+      }
+    });
+  >
+>

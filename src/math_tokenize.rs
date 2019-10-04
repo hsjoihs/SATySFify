@@ -54,6 +54,10 @@ pub mod tok {
                 ']' => some_char_token(ch, TokenType::RightBracket),
                 '_' => some_char_token(ch, TokenType::Underscore),
                 'a'..='z' | 'A'..='Z' | '0'..='9' => some_char_token(ch, TokenType::Alphanumeric),
+                '\'' => Some(Token {
+                    kind: TokenType::BackslashFollowedByAlphanumerics,
+                    str_repr: "\\satysfifi-internal-prime".to_string(),
+                }),
                 '+' | '*' | ',' | '.' | '|' | '/' | '-' | '<' | '>' | '=' => {
                     some_char_token(ch, TokenType::OrdinaryOperator)
                 }
