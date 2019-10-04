@@ -1,4 +1,3 @@
-
 pub use crate::math_tokenize::tok;
 use termion::{color, style};
 #[derive(Debug)]
@@ -33,6 +32,31 @@ fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
         (ans, None) => Ok(ans),
         _ => unreachable!(),
     }
+}
+
+pub fn activated_math_addons(math: &Math) -> Vec<&str> {
+    let addon_defs: HashMap<String, &str> = [(
+        "\\hbar".to_string(),
+        "let-math \\hbar = math-char MathOrd `ℏ` in ",
+    ), ("\\satysfifi-internal-paren-left-sqbracket-right".to_string(),
+     "let-math \\satysfifi-internal-paren-left-sqbracket-right  = math-paren Math.paren-left Math.sqbracket-right in "
+    ), ("\\satysfifi-internal-sqbracket-left-paren-right".to_string(),
+     "let-math \\satysfifi-internal-sqbracket-left-paren-right  = math-paren Math.sqbracket-left Math.paren-right in "
+    )]
+    .iter()
+    .cloned()
+    .collect();
+
+    let what_to_activate = get_what_to_activate_(&math);
+
+    let mut activated_addons = Vec::new();
+
+    for (key, code) in &addon_defs {
+        if what_to_activate.get(key).is_some() {
+            activated_addons.push(*code);
+        }
+    }
+    activated_addons
 }
 
 fn to_stuffs_(
@@ -216,7 +240,7 @@ impl LeftParenKind {
     }
 }
 
-pub fn print_expr_(stuffs: &[Stuff], indent: usize) {
+pub fn print_math(stuffs: &[Stuff], indent: usize) {
     for st in stuffs {
         match st {
             Stuff::Simple(t) => {
@@ -235,19 +259,19 @@ pub fn print_expr_(stuffs: &[Stuff], indent: usize) {
             }
             Stuff::Braced(vec) => {
                 println!("{:indent$}{{", "", indent = indent);
-                print_expr_(vec, indent + 2);
+                print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
             Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightParen) => {
                 println!("{:indent$}\\paren", "", indent = indent);
                 println!("{:indent$}{{", "", indent = indent);
-                print_expr_(vec, indent + 2);
+                print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
             Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightBracket) => {
                 println!("{:indent$}\\sqbracket", "", indent = indent);
                 println!("{:indent$}{{", "", indent = indent);
-                print_expr_(vec, indent + 2);
+                print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
             Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightBracket) => {
@@ -257,7 +281,7 @@ pub fn print_expr_(stuffs: &[Stuff], indent: usize) {
                     indent = indent
                 );
                 println!("{:indent$}{{", "", indent = indent);
-                print_expr_(vec, indent + 2);
+                print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
 
@@ -268,18 +292,19 @@ pub fn print_expr_(stuffs: &[Stuff], indent: usize) {
                     indent = indent
                 );
                 println!("{:indent$}{{", "", indent = indent);
-                print_expr_(vec, indent + 2);
+                print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
         }
     }
 }
+use std::collections::HashMap;
 
 pub struct Math {
     pub stuffs: Vec<Stuff>,
 }
 use std::collections::HashSet;
-pub fn get_what_to_activate_(math: &Math) -> HashSet<String> {
+fn get_what_to_activate_(math: &Math) -> HashSet<String> {
     get_what_to_activate(&math.stuffs)
 }
 fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
