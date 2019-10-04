@@ -11,6 +11,8 @@ pub mod tok {
         RightParen,
         LeftBrace,
         RightBrace,
+        LeftBracket,
+        RightBracket,
     }
 
     #[repr(C)]
@@ -48,6 +50,8 @@ pub mod tok {
                 '^' => some_char_token(ch, TokenType::Caret),
                 '{' => some_char_token(ch, TokenType::LeftBrace),
                 '}' => some_char_token(ch, TokenType::RightBrace),
+                '[' => some_char_token(ch, TokenType::LeftBracket),
+                ']' => some_char_token(ch, TokenType::RightBracket),
                 '_' => some_char_token(ch, TokenType::Underscore),
                 'a'..='z' | 'A'..='Z' | '0'..='9' => some_char_token(ch, TokenType::Alphanumeric),
                 '+' | '*' | ',' | '.' | '|' | '/' | '-' | '<' | '>' | '=' => {

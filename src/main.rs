@@ -20,17 +20,20 @@ enum Stuff {
 enum LeftParenKind {
     BareLeftParen,
     BareLeftBrace,
+    BareLeftBracket,
     BackslashLeft(BSLeftKind),
 }
 
 #[derive(Copy, Clone, Debug)]
 enum BSLeftKind {
     LeftParen,
+    LeftBracket,
 }
 
 #[derive(Copy, Clone, Debug)]
 enum BSRightKind {
     RightParen,
+    RightBracket,
 }
 
 fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
@@ -72,6 +75,18 @@ fn to_stuffs_(
                                 hopefully_something.expect("should not happen"),
                             ));
                         }
+                        tok::TokenType::LeftBracket => {
+                            let mut new_stack = paren_stack.to_owned();
+                            new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftBracket));
+                            let (inner_stuffs, hopefully_something) =
+                                to_stuffs_(&mut iter, &*new_stack)?;
+
+                            res.push(Stuff::LeftRightPair(
+                                BSLeftKind::LeftBracket,
+                                inner_stuffs,
+                                hopefully_something.expect("should not happen"),
+                            ));
+                        }
                         _ => unimplemented!("unimplemented token found after `\\left`"),
                     }
                 } else if x.str_repr == "\\right" {
@@ -89,6 +104,20 @@ fn to_stuffs_(
                             Some(&x) => {
                                 return Err(format!(
                                     "`\\right)` encountered before {} was matched",
+                                    x.msg()
+                                ));
+                            }
+                        },
+                        tok::TokenType::RightBracket => match paren_stack.last() {
+                            None => {
+                                return Err("unmatched `\\right]`".to_string());
+                            }
+                            Some(LeftParenKind::BackslashLeft(_)) => {
+                                return Ok((res, Some(BSRightKind::RightBracket)));
+                            }
+                            Some(&x) => {
+                                return Err(format!(
+                                    "`\\right]` encountered before {} was matched",
                                     x.msg()
                                 ));
                             }
@@ -122,6 +151,19 @@ fn to_stuffs_(
                 }
                 res.push(Stuff::Braced(inner_stuffs));
             }
+            tok::TokenType::LeftBracket => {
+                let mut new_stack = paren_stack.to_owned();
+                new_stack.push(LeftParenKind::BareLeftBracket);
+                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
+                if hopefully_none.is_some() {
+                    unreachable!();
+                }
+                res.push(Stuff::Simple(tok::Token {
+                    kind: tok::TokenType::BackslashFollowedByAlphanumerics,
+                    str_repr: "\\sqbracket".to_string(),
+                }));
+                res.push(Stuff::Braced(inner_stuffs));
+            }
             tok::TokenType::RightBrace => match paren_stack.last() {
                 None => return Err("unmatched right brace".to_string()),
                 Some(LeftParenKind::BareLeftBrace) => {
@@ -146,6 +188,18 @@ fn to_stuffs_(
                     ))
                 }
             },
+            tok::TokenType::RightBracket => match paren_stack.last() {
+                None => return Err("unmatched right bracket".to_string()),
+                Some(LeftParenKind::BareLeftBracket) => {
+                    return Ok((res, None));
+                }
+                Some(&x) => {
+                    return Err(format!(
+                        "right bracket encountered before {} was matched",
+                        x.msg()
+                    ))
+                }
+            },
         };
     }
 
@@ -161,9 +215,11 @@ fn to_stuffs_(
 impl LeftParenKind {
     fn msg(self) -> &'static str {
         match self {
-            LeftParenKind::BareLeftBrace => "a left brace",
+            LeftParenKind::BareLeftBrace => "a left brace `{`",
             LeftParenKind::BackslashLeft(BSLeftKind::LeftParen) => "`\\left(`",
-            LeftParenKind::BareLeftParen => "a left paren",
+            LeftParenKind::BackslashLeft(BSLeftKind::LeftBracket) => "`\\left[`",
+            LeftParenKind::BareLeftParen => "a left paren `(`",
+            LeftParenKind::BareLeftBracket => "a left bracket `[`",
         }
     }
 }
@@ -196,6 +252,33 @@ fn print_expr_(stuffs: &[Stuff], indent: usize) {
                 print_expr_(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
+            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightBracket) => {
+                println!("{:indent$}\\sqbracket", "", indent = indent);
+                println!("{:indent$}{{", "", indent = indent);
+                print_expr_(vec, indent + 2);
+                println!("{:indent$}}}", "", indent = indent);
+            }
+            Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightBracket) => {
+                println!(
+                    "{:indent$}\\satysfifi-internal-paren-left-sqbracket-right",
+                    "",
+                    indent = indent
+                );
+                println!("{:indent$}{{", "", indent = indent);
+                print_expr_(vec, indent + 2);
+                println!("{:indent$}}}", "", indent = indent);
+            }
+
+            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightParen) => {
+                println!(
+                    "{:indent$}\\satysfifi-internal-sqbracket-left-paren-right",
+                    "",
+                    indent = indent
+                );
+                println!("{:indent$}{{", "", indent = indent);
+                print_expr_(vec, indent + 2);
+                println!("{:indent$}}}", "", indent = indent);
+            }
         }
     }
 }
@@ -216,6 +299,26 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
                 }
             }
             Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightParen) => {
+                let internal = get_what_to_activate(vec);
+                for k in &internal {
+                    defs.insert(k.to_string());
+                }
+            }
+            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightBracket) => {
+                let internal = get_what_to_activate(vec);
+                for k in &internal {
+                    defs.insert(k.to_string());
+                }
+            }
+            Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightBracket) => {
+                defs.insert("\\satysfifi-internal-paren-left-sqbracket-right".to_string());
+                let internal = get_what_to_activate(vec);
+                for k in &internal {
+                    defs.insert(k.to_string());
+                }
+            }
+            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightParen) => {
+                defs.insert("\\satysfifi-internal-sqbracket-left-paren-right".to_string());
                 let internal = get_what_to_activate(vec);
                 for k in &internal {
                     defs.insert(k.to_string());
@@ -244,6 +347,10 @@ fn main() -> Result<(), String> {
     let on_the_fly: HashMap<String, &str> = [(
         "\\hbar".to_string(),
         "let-math \\hbar = math-char MathOrd `ℏ` in ",
+    ), ("\\satysfifi-internal-paren-left-sqbracket-right".to_string(),
+     "let-math \\satysfifi-internal-paren-left-sqbracket-right  = math-paren Math.paren-left Math.sqbracket-right in "
+    ), ("\\satysfifi-internal-sqbracket-left-paren-right".to_string(),
+     "let-math \\satysfifi-internal-sqbracket-left-paren-right  = math-paren Math.sqbracket-left Math.paren-right in "
     )]
     .iter()
     .cloned()

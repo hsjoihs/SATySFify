@@ -1,0 +1,25 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+let-math \satysfifi-internal-sqbracket-left-paren-right  = math-paren Math.sqbracket-left Math.paren-right in 
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      \satysfifi-internal-sqbracket-left-paren-right
+      {
+        L
+        \psi
+      }
+      ^
+      2
+    });
+  >
+>

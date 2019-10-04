@@ -1,0 +1,24 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      \sqbracket
+      {
+        L
+        \psi
+      }
+      ^
+      2
+    });
+  >
+>

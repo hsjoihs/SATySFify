@@ -39,3 +39,9 @@ all:
 	satysfi test/test018.saty
 	./target/debug/SATySFify 'L^2\psi = \left(x\frac{\hbar}{i}\partial_y - y\frac{\hbar}{i}\partial_x\right)\left(x\frac{\hbar}{i}\partial_y - y\frac{\hbar}{i}\partial_x\right)\psi + \dots' > test/test019.saty
 	satysfi test/test019.saty
+	./target/debug/SATySFify '\left( L\psi\right]^2' > test/test020.saty
+	satysfi test/test020.saty
+	./target/debug/SATySFify '\left[ L\psi\right]^2' > test/test021.saty
+	satysfi test/test021.saty
+	./target/debug/SATySFify '\left[ L\psi\right)^2' > test/test022.saty
+	satysfi test/test022.saty
