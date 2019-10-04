@@ -52,3 +52,6 @@ all:
 	./target/debug/SATySFify $$'n(AB+BC)-DC\' = \\frac{2nl}{\\cos v} -2nl \\tan v\\sin v' > test/test025.saty
 	satysfi test/test025.saty
 
+# must remove redundant {}, which is a whole lot of pain
+#	./target/debug/SATySFify '1 +\int_1^{n_0} x^{-b}dx >  \sum_{n=1}^{n_0} {n^{-b}} > \int_1^{n_0+1} x^{-b}dx' > test/test026.saty
+#	satysfi test/test026.saty
