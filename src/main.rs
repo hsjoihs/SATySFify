@@ -285,6 +285,10 @@ fn print_expr_(stuffs: &[Stuff], indent: usize) {
 
 use std::collections::HashSet;
 
+fn get_what_to_activate_(math: &Math) -> HashSet<String> {
+    get_what_to_activate(&math.0)
+}
+
 fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
     let mut defs = HashSet::new();
     for st in stuffs {
@@ -336,15 +340,22 @@ fn main() -> Result<(), String> {
     if args.len() != 2 {
         return Err("Incorrect number of arguments\n".to_string());
     }
-    let tokens = tok::to_tokens(&args[1])?;
+    print(&args[1], 6)
+}
+
+struct Math(Vec<Stuff>);
+
+fn print(input: &str, indent: usize) -> Result<(), String> {
+    let tokens = tok::to_tokens(&input)?;
     let stuffs = to_stuffs(tokens)?;
+    let math = Math(stuffs);
 
     for lib in &["stdjabook", "code", "itemize", "tabular", "math"] {
         println!("@require: {}", lib);
     }
     println!();
 
-    let on_the_fly: HashMap<String, &str> = [(
+    let addon_defs: HashMap<String, &str> = [(
         "\\hbar".to_string(),
         "let-math \\hbar = math-char MathOrd `ℏ` in ",
     ), ("\\satysfifi-internal-paren-left-sqbracket-right".to_string(),
@@ -356,12 +367,18 @@ fn main() -> Result<(), String> {
     .cloned()
     .collect();
 
-    let what_to_activate = get_what_to_activate(&stuffs);
+    let what_to_activate = get_what_to_activate_(&math);
 
-    for (key, code) in &on_the_fly {
+    let mut activated_addons = Vec::new();
+
+    for (key, code) in &addon_defs {
         if what_to_activate.get(key).is_some() {
-            println!("{}", code);
+            activated_addons.push(code);
         }
+    }
+
+    for code in &activated_addons {
+        println!("{}", code);
     }
 
     println!("document (|");
@@ -373,8 +390,8 @@ fn main() -> Result<(), String> {
     println!("  +section{{}}<");
     println!("    +math(${{");
 
-    print_expr_(&stuffs, 6);
-    eprintln!("{:?}", stuffs);
+    print_expr_(&math.0, indent);
+    eprintln!("{:?}", math.0);
 
     println!("    }});");
     println!("  >");
