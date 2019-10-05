@@ -35,18 +35,26 @@ fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
 }
 
 pub fn activated_math_addons(math: &Math) -> Vec<&str> {
-    let addon_defs: HashMap<String, &str> = [(
-        "\\hbar".to_string(),
-        "let-math \\hbar = math-char MathOrd `ℏ` in ",
-    ), (
+    let addon_defs: HashMap<String, &str> = [
+        (
+            "\\hbar".to_string(),
+            "let-math \\hbar = math-char MathOrd `ℏ` in ",
+        ),
+        (
+            "\\satysfifi-internal-prime".to_string(),
+            "let-math \\satysfifi-internal-prime = math-char MathOrd `′` in ",
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect();
+
+    let paren_addon_defs: HashMap<String, &str> = [(
         "\\satysfifi-internal-paren-left-sqbracket-right".to_string(),
      "let-math \\satysfifi-internal-paren-left-sqbracket-right  = math-paren Math.paren-left Math.sqbracket-right in "
     ), (
         "\\satysfifi-internal-sqbracket-left-paren-right".to_string(),
      "let-math \\satysfifi-internal-sqbracket-left-paren-right  = math-paren Math.sqbracket-left Math.paren-right in "
-    ), (
-        "\\satysfifi-internal-prime".to_string(),
-        "let-math \\satysfifi-internal-prime = math-char MathOrd `′` in "
     )]
     .iter()
     .cloned()
@@ -57,6 +65,11 @@ pub fn activated_math_addons(math: &Math) -> Vec<&str> {
     let mut activated_addons = Vec::new();
 
     for (key, code) in &addon_defs {
+        if what_to_activate.get(key).is_some() {
+            activated_addons.push(*code);
+        }
+    }
+    for (key, code) in &paren_addon_defs {
         if what_to_activate.get(key).is_some() {
             activated_addons.push(*code);
         }
@@ -349,27 +362,10 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
                     defs.insert(k.to_string());
                 }
             }
-            Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightParen) => {
-                let internal = get_what_to_activate(vec);
-                for k in &internal {
-                    defs.insert(k.to_string());
+            Stuff::LeftRightPair(left, vec, right) => {
+                if *right != left.matching_right() {
+                    defs.insert(get_command_name_from_leftright(*left, *right));
                 }
-            }
-            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightBracket) => {
-                let internal = get_what_to_activate(vec);
-                for k in &internal {
-                    defs.insert(k.to_string());
-                }
-            }
-            Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightBracket) => {
-                defs.insert("\\satysfifi-internal-paren-left-sqbracket-right".to_string());
-                let internal = get_what_to_activate(vec);
-                for k in &internal {
-                    defs.insert(k.to_string());
-                }
-            }
-            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightParen) => {
-                defs.insert("\\satysfifi-internal-sqbracket-left-paren-right".to_string());
                 let internal = get_what_to_activate(vec);
                 for k in &internal {
                     defs.insert(k.to_string());
