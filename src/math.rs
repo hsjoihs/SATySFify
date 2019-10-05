@@ -7,7 +7,7 @@ pub enum Stuff {
     LeftRightPair(BSLeftKind, Vec<Stuff>, BSRightKind),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum LeftParenKind {
     BareLeftParen,
     BareLeftBrace,
@@ -15,13 +15,13 @@ pub enum LeftParenKind {
     BackslashLeft(BSLeftKind),
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum BSLeftKind {
     LeftParen,
     LeftBracket,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum BSRightKind {
     RightParen,
     RightBracket,
@@ -245,6 +245,15 @@ impl LeftParenKind {
     }
 }
 
+impl BSLeftKind {
+    fn matching_right(self) -> BSRightKind {
+        match self {
+            BSLeftKind::LeftParen => BSRightKind::RightParen,
+            BSLeftKind::LeftBracket => BSRightKind::RightBracket,
+        }
+    }
+}
+
 pub fn print_math(stuffs: &[Stuff], indent: usize) {
     for st in stuffs {
         match st {
@@ -267,33 +276,11 @@ pub fn print_math(stuffs: &[Stuff], indent: usize) {
                 print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
-            Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightParen) => {
-                println!("{:indent$}\\paren", "", indent = indent);
-                println!("{:indent$}{{", "", indent = indent);
-                print_math(vec, indent + 2);
-                println!("{:indent$}}}", "", indent = indent);
-            }
-            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightBracket) => {
-                println!("{:indent$}\\sqbracket", "", indent = indent);
-                println!("{:indent$}{{", "", indent = indent);
-                print_math(vec, indent + 2);
-                println!("{:indent$}}}", "", indent = indent);
-            }
-            Stuff::LeftRightPair(BSLeftKind::LeftParen, vec, BSRightKind::RightBracket) => {
+            Stuff::LeftRightPair(left, vec, right) => {
                 println!(
-                    "{:indent$}\\satysfifi-internal-paren-left-sqbracket-right",
+                    "{:indent$}{}",
                     "",
-                    indent = indent
-                );
-                println!("{:indent$}{{", "", indent = indent);
-                print_math(vec, indent + 2);
-                println!("{:indent$}}}", "", indent = indent);
-            }
-
-            Stuff::LeftRightPair(BSLeftKind::LeftBracket, vec, BSRightKind::RightParen) => {
-                println!(
-                    "{:indent$}\\satysfifi-internal-sqbracket-left-paren-right",
-                    "",
+                    get_command_name_from_leftright(*left, *right),
                     indent = indent
                 );
                 println!("{:indent$}{{", "", indent = indent);
@@ -303,6 +290,43 @@ pub fn print_math(stuffs: &[Stuff], indent: usize) {
         }
     }
 }
+
+fn get_command_name_from_leftright(left: BSLeftKind, right: BSRightKind) -> String {
+    if right == left.matching_right() {
+        format!("\\{}", left.matching_name())
+    } else {
+        format!(
+            "\\satysfifi-internal-{}-{}",
+            left.satysfi_name(),
+            right.satysfi_name()
+        )
+    }
+}
+
+impl BSLeftKind {
+    fn satysfi_name(self) -> &'static str {
+        match self {
+            BSLeftKind::LeftBracket => "sqbracket-left",
+            BSLeftKind::LeftParen => "paren-left",
+        }
+    }
+    fn matching_name(self) -> &'static str {
+        match self {
+            BSLeftKind::LeftBracket => "sqbracket",
+            BSLeftKind::LeftParen => "paren",
+        }
+    }
+}
+
+impl BSRightKind {
+    fn satysfi_name(self) -> &'static str {
+        match self {
+            BSRightKind::RightBracket => "sqbracket-right",
+            BSRightKind::RightParen => "paren-right",
+        }
+    }
+}
+
 use std::collections::HashMap;
 
 pub struct Math {
