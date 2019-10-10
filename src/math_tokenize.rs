@@ -58,9 +58,13 @@ pub mod tok {
                     kind: TokenType::BackslashFollowedByAlphanumerics,
                     str_repr: "\\satysfifi-internal-prime".to_string(),
                 }),
-                '+' | '*' | ',' | '.' | '|' | '/' | '-' | '<' | '>' | '=' => {
+                '+' | '*' | ',' | '.' | '/' | '-' | '<' | '>' | '=' => {
                     some_char_token(ch, TokenType::OrdinaryOperator)
                 }
+                '|' => Some(Token {
+                    kind: TokenType::OrdinaryOperator,
+                    str_repr: "\\|".to_string(),
+                }),
                 '\\' => {
                     let after_backslash = iter
                         .next()

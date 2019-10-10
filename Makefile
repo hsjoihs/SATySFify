@@ -57,7 +57,8 @@ all:
 	satysfi test/test027.saty
 	./target/debug/SATySFify 'a\left|b\right.' > test/test028.saty
 	satysfi test/test028.saty
-	
+	./target/debug/SATySFify '|c|^2 = a\cdot a + 4 a\cdot b +4 b\cdot b = 16u^2 - 28u^2 + 16u^2 = 4u^2' > test/test029.saty
+	satysfi test/test029.saty
 
 # \dot and \vec are needed 
 #	./target/debug/SATySFify '\dot{x}' > test/test026.saty
@@ -66,3 +67,5 @@ all:
 # must remove redundant {}, which is a whole lot of pain
 #	./target/debug/SATySFify '1 +\int_1^{n_0} x^{-b}dx >  \sum_{n=1}^{n_0} {n^{-b}} > \int_1^{n_0+1} x^{-b}dx' > test/test026.saty
 #	satysfi test/test026.saty
+
+# \\ must be handled

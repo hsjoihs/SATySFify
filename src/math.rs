@@ -94,7 +94,7 @@ impl tok::Token {
             tok::TokenType::OrdinaryOperator => {
                 if self.str_repr == "." {
                     return BSRightKind::RightEmpty;
-                } else if self.str_repr == "|" {
+                } else if self.str_repr == "\\|" {
                     return BSRightKind::RightPipe;
                 } else {
                     unimplemented!("unimplemented token found after `\\right`")
@@ -150,7 +150,7 @@ fn to_stuffs_(
                             ));
                         }
                         tok::TokenType::OrdinaryOperator => {
-                            if next_tok.str_repr == "|" {
+                            if next_tok.str_repr == "\\|" {
                                 let mut new_stack = paren_stack.to_owned();
                                 new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftPipe));
                                 let (inner_stuffs, hopefully_something) =

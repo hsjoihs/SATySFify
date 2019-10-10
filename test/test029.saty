@@ -1,0 +1,59 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      \|
+      c
+      \|
+      ^
+      2
+      =
+      a
+      \cdot
+      a
+      +
+      4
+      a
+      \cdot
+      b
+      +
+      4
+      b
+      \cdot
+      b
+      =
+      1
+      6
+      u
+      ^
+      2
+      -
+      2
+      8
+      u
+      ^
+      2
+      +
+      1
+      6
+      u
+      ^
+      2
+      =
+      4
+      u
+      ^
+      2
+    });
+  >
+>
