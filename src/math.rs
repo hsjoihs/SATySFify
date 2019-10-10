@@ -86,6 +86,24 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
 
     activated_addons
 }
+impl tok::Token {
+    fn to_bsrightkind(&self) -> BSRightKind {
+        match self.kind {
+            tok::TokenType::RightParen => return BSRightKind::RightParen,
+            tok::TokenType::RightBracket => return BSRightKind::RightBracket,
+            tok::TokenType::OrdinaryOperator => {
+                if self.str_repr == "." {
+                    return BSRightKind::RightEmpty;
+                } else if self.str_repr == "|" {
+                    return BSRightKind::RightPipe;
+                } else {
+                    unimplemented!("unimplemented token found after `\\right`")
+                }
+            }
+            _ => unimplemented!("unimplemented token found after `\\right`"),
+        }
+    }
+}
 
 fn to_stuffs_(
     mut iter: &mut std::vec::IntoIter<tok::Token>,
@@ -164,72 +182,23 @@ fn to_stuffs_(
                     let next_tok = iter
                         .next()
                         .ok_or("end of input encountered after `\\right`")?;
-                    match next_tok.kind {
-                        tok::TokenType::RightParen => match paren_stack.last() {
-                            None => {
-                                return Err("unmatched `\\right)`".to_string());
-                            }
-                            Some(LeftParenKind::BackslashLeft(_)) => {
-                                return Ok((res, Some(BSRightKind::RightParen)));
-                            }
-                            Some(&x) => {
-                                return Err(format!(
-                                    "`\\right)` encountered before {} was matched",
-                                    x.msg()
-                                ));
-                            }
-                        },
-                        tok::TokenType::RightBracket => match paren_stack.last() {
-                            None => {
-                                return Err("unmatched `\\right]`".to_string());
-                            }
-                            Some(LeftParenKind::BackslashLeft(_)) => {
-                                return Ok((res, Some(BSRightKind::RightBracket)));
-                            }
-                            Some(&x) => {
-                                return Err(format!(
-                                    "`\\right]` encountered before {} was matched",
-                                    x.msg()
-                                ));
-                            }
-                        },
-                        tok::TokenType::OrdinaryOperator => {
-                            if next_tok.str_repr == "." {
-                                match paren_stack.last() {
-                                    None => {
-                                        return Err("unmatched `\\right.`".to_string());
-                                    }
-                                    Some(LeftParenKind::BackslashLeft(_)) => {
-                                        return Ok((res, Some(BSRightKind::RightEmpty)));
-                                    }
-                                    Some(&x) => {
-                                        return Err(format!(
-                                            "`\\right.` encountered before {} was matched",
-                                            x.msg()
-                                        ));
-                                    }
-                                }
-                            } else if next_tok.str_repr == "|" {
-                                match paren_stack.last() {
-                                    None => {
-                                        return Err("unmatched `\\right|`".to_string());
-                                    }
-                                    Some(LeftParenKind::BackslashLeft(_)) => {
-                                        return Ok((res, Some(BSRightKind::RightPipe)));
-                                    }
-                                    Some(&x) => {
-                                        return Err(format!(
-                                            "`\\right|` encountered before {} was matched",
-                                            x.msg()
-                                        ));
-                                    }
-                                }
-                            } else {
-                                unimplemented!("unimplemented token found after `\\right`")
-                            }
+                    let bsrightkind = next_tok.to_bsrightkind();
+
+                    match paren_stack.last() {
+                        None => {
+                            return Err("unmatched {}".to_string());
                         }
-                        _ => unimplemented!("unimplemented token found after `\\right`"),
-                    }
+                        Some(LeftParenKind::BackslashLeft(_)) => {
+                            return Ok((res, Some(bsrightkind)));
+                        }
+                        Some(&x) => {
+                            return Err(format!(
+                                "{} encountered before {} was matched",
+                                bsrightkind.msg(),
+                                x.msg()
+                            ));
+                        }
+                    };
                 } else {
                     res.push(Stuff::Simple(x));
                 }
@@ -328,6 +297,17 @@ impl LeftParenKind {
             LeftParenKind::BackslashLeft(BSLeftKind::LeftPipe) => "`\\left|`",
             LeftParenKind::BareLeftParen => "a left paren `(`",
             LeftParenKind::BareLeftBracket => "a left bracket `[`",
+        }
+    }
+}
+
+impl BSRightKind {
+    fn msg(self) -> &'static str {
+        match self {
+            BSRightKind::RightBracket => "`\\right]`",
+            BSRightKind::RightEmpty => "`\\right.`",
+            BSRightKind::RightParen => "`\\right)`",
+            BSRightKind::RightPipe => "`\\right|`",
         }
     }
 }
