@@ -34,28 +34,17 @@ fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
     }
 }
 
-pub fn activated_math_addons(math: &Math) -> Vec<&str> {
-    let addon_defs: HashMap<String, &str> = [
+pub fn activated_math_addons(math: &Math) -> Vec<String> {
+    let addon_defs: HashMap<String, String> = [
         (
             "\\hbar".to_string(),
-            "let-math \\hbar = math-char MathOrd `ℏ` in ",
+            "let-math \\hbar = math-char MathOrd `ℏ` in ".to_string(),
         ),
         (
             "\\satysfifi-internal-prime".to_string(),
-            "let-math \\satysfifi-internal-prime = math-char MathOrd `′` in ",
+            "let-math \\satysfifi-internal-prime = math-char MathOrd `′` in ".to_string(),
         ),
     ]
-    .iter()
-    .cloned()
-    .collect();
-
-    let paren_addon_defs: HashMap<String, &str> = [(
-        "\\satysfifi-internal-paren-left-sqbracket-right".to_string(),
-     "let-math \\satysfifi-internal-paren-left-sqbracket-right  = math-paren Math.paren-left Math.sqbracket-right in "
-    ), (
-        "\\satysfifi-internal-sqbracket-left-paren-right".to_string(),
-     "let-math \\satysfifi-internal-sqbracket-left-paren-right  = math-paren Math.sqbracket-left Math.paren-right in "
-    )]
     .iter()
     .cloned()
     .collect();
@@ -65,15 +54,27 @@ pub fn activated_math_addons(math: &Math) -> Vec<&str> {
     let mut activated_addons = Vec::new();
 
     for (key, code) in &addon_defs {
-        if what_to_activate.get(key).is_some() {
-            activated_addons.push(*code);
+        if what_to_activate.contains(key) {
+            activated_addons.push(code.clone());
         }
     }
-    for (key, code) in &paren_addon_defs {
-        if what_to_activate.get(key).is_some() {
-            activated_addons.push(*code);
+
+    for left in &["paren-left", "sqbracket-left"] {
+        for right in &["sqbracket-right", "paren-right"] {
+            if what_to_activate
+                .contains(&format!("\\satysfifi-internal-{}-{}", left, right).clone())
+            {
+                activated_addons.push(
+                    format!(
+                        "let-math \\satysfifi-internal-{}-{}  = math-paren Math.{} Math.{} in ",
+                        left, right, left, right
+                    )
+                    .to_string(),
+                );
+            }
         }
     }
+
     activated_addons
 }
 

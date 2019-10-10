@@ -15,7 +15,7 @@ fn main() -> Result<(), String> {
         return Err("Incorrect number of arguments\n".to_string());
     }
     print_satysfi(
-        &vec!["stdjabook", "code", "itemize", "tabular", "math"],
+        &["stdjabook", "code", "itemize", "tabular", "math"],
         &args[1],
         6,
     )
