@@ -385,7 +385,7 @@ impl BSLeftKind {
         match self {
             BSLeftKind::LeftBracket => "sqbracket",
             BSLeftKind::LeftParen => "paren",
-            BSLeftKind::LeftEmpty => "satysfi-internal-empty-paren-empty-paren",
+            BSLeftKind::LeftEmpty => "satysfifi-internal-empty-paren-empty-paren",
             BSLeftKind::LeftPipe => "abs",
         }
     }
@@ -425,7 +425,7 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
                 }
             }
             Stuff::LeftRightPair(left, vec, right) => {
-                if *right != left.matching_right() {
+                if *right != left.matching_right() || *left == BSLeftKind::LeftEmpty {
                     defs.insert(get_command_name_from_leftright(*left, *right));
                 }
                 let internal = get_what_to_activate(vec);

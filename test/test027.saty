@@ -1,0 +1,23 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+let-math \satysfifi-internal-empty-paren-empty-paren  = math-paren Math.empty-paren Math.empty-paren in 
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      a
+      \satysfifi-internal-empty-paren-empty-paren
+      {
+        b
+      }
+    });
+  >
+>

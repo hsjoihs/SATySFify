@@ -53,6 +53,11 @@ all:
 	satysfi test/test025.saty
 	./target/debug/SATySFify '\frac{d}{dt} (x, p) = \left.\left(\frac{\partial H(a,b)}{\partial b}, -\frac{\partial H(a,b)}{\partial a} \right)\right|_{a=x, b=p}' > test/test026.saty
 	satysfi test/test026.saty
+	./target/debug/SATySFify 'a\left.b\right.' > test/test027.saty
+	satysfi test/test027.saty
+	./target/debug/SATySFify 'a\left|b\right.' > test/test028.saty
+	satysfi test/test028.saty
+	
 
 # \dot and \vec are needed 
 #	./target/debug/SATySFify '\dot{x}' > test/test026.saty
