@@ -4,7 +4,7 @@
 @require: tabular
 @require: math
 
-let-math \satysfifi-internal-empty-paren-bar-middle  = math-paren Math.empty-paren Math.bar-middle in 
+let-math \satysfify-internal-empty-paren-bar-middle  = math-paren Math.empty-paren Math.bar-middle in 
 document (|
   title = {};
   author = {};
@@ -28,7 +28,7 @@ document (|
         p
       }
       =
-      \satysfifi-internal-empty-paren-bar-middle
+      \satysfify-internal-empty-paren-bar-middle
       {
         \paren
         {

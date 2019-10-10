@@ -4,7 +4,7 @@
 @require: tabular
 @require: math
 
-let-math \satysfifi-internal-paren-left-sqbracket-right  = math-paren Math.paren-left Math.sqbracket-right in 
+let-math \satysfify-internal-paren-left-sqbracket-right  = math-paren Math.paren-left Math.sqbracket-right in 
 document (|
   title = {};
   author = {};
@@ -13,7 +13,7 @@ document (|
 |) '<
   +section{}<
     +math(${
-      \satysfifi-internal-paren-left-sqbracket-right
+      \satysfify-internal-paren-left-sqbracket-right
       {
         L
         \psi

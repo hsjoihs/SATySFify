@@ -4,7 +4,7 @@
 @require: tabular
 @require: math
 
-let-math \satysfifi-internal-prime = math-char MathOrd `′` in 
+let-math \satysfify-internal-prime = math-char MathOrd `′` in 
 document (|
   title = {};
   author = {};
@@ -25,7 +25,7 @@ document (|
       -
       D
       C
-      \satysfifi-internal-prime
+      \satysfify-internal-prime
       =
       \frac
       {

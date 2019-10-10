@@ -45,8 +45,8 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
             "let-math \\hbar = math-char MathOrd `ℏ` in ".to_string(),
         ),
         (
-            "\\satysfifi-internal-prime".to_string(),
-            "let-math \\satysfifi-internal-prime = math-char MathOrd `′` in ".to_string(),
+            "\\satysfify-internal-prime".to_string(),
+            "let-math \\satysfify-internal-prime = math-char MathOrd `′` in ".to_string(),
         ),
     ]
     .iter()
@@ -71,11 +71,11 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
             "bar-middle",
         ] {
             if what_to_activate
-                .contains(&format!("\\satysfifi-internal-{}-{}", left, right).clone())
+                .contains(&format!("\\satysfify-internal-{}-{}", left, right).clone())
             {
                 activated_addons.push(
                     format!(
-                        "let-math \\satysfifi-internal-{left}-{right}  = math-paren Math.{left} Math.{right} in ",
+                        "let-math \\satysfify-internal-{left}-{right}  = math-paren Math.{left} Math.{right} in ",
                         left=left, right=right
                     )
                     .to_string(),
@@ -365,7 +365,7 @@ fn get_command_name_from_leftright(left: BSLeftKind, right: BSRightKind) -> Stri
         format!("\\{}", left.satysfi_name_when_pair_matches())
     } else {
         format!(
-            "\\satysfifi-internal-{}-{}",
+            "\\satysfify-internal-{}-{}",
             left.satysfi_name(),
             right.satysfi_name()
         )
@@ -385,7 +385,7 @@ impl BSLeftKind {
         match self {
             BSLeftKind::LeftBracket => "sqbracket",
             BSLeftKind::LeftParen => "paren",
-            BSLeftKind::LeftEmpty => "satysfifi-internal-empty-paren-empty-paren",
+            BSLeftKind::LeftEmpty => "satysfify-internal-empty-paren-empty-paren",
             BSLeftKind::LeftPipe => "abs",
         }
     }
