@@ -66,8 +66,8 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
             {
                 activated_addons.push(
                     format!(
-                        "let-math \\satysfifi-internal-{}-{}  = math-paren Math.{} Math.{} in ",
-                        left, right, left, right
+                        "let-math \\satysfifi-internal-{left}-{right}  = math-paren Math.{left} Math.{right} in ",
+                        left=left, right=right
                     )
                     .to_string(),
                 );
