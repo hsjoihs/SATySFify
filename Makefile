@@ -51,6 +51,12 @@ all:
 	satysfi test/test024.saty
 	./target/debug/SATySFify $$'n(AB+BC)-DC\' = \\frac{2nl}{\\cos v} -2nl \\tan v\\sin v' > test/test025.saty
 	satysfi test/test025.saty
+	./target/debug/SATySFify '\frac{d}{dt} (x, p) = \left.\left(\frac{\partial H(a,b)}{\partial b}, -\frac{\partial H(a,b)}{\partial a} \right)\right|_{a=x, b=p}' > test/test026.saty
+	satysfi test/test026.saty
+
+# \dot and \vec are needed 
+#	./target/debug/SATySFify '\dot{x}' > test/test026.saty
+#	satysfi test/test026.saty
 
 # must remove redundant {}, which is a whole lot of pain
 #	./target/debug/SATySFify '1 +\int_1^{n_0} x^{-b}dx >  \sum_{n=1}^{n_0} {n^{-b}} > \int_1^{n_0+1} x^{-b}dx' > test/test026.saty

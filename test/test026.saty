@@ -1,0 +1,81 @@
+@require: stdjabook
+@require: code
+@require: itemize
+@require: tabular
+@require: math
+
+let-math \satysfifi-internal-empty-paren-bar-middle  = math-paren Math.empty-paren Math.bar-middle in 
+document (|
+  title = {};
+  author = {};
+  show-title = false;
+  show-toc = false;
+|) '<
+  +section{}<
+    +math(${
+      \frac
+      {
+        d
+      }
+      {
+        d
+        t
+      }
+      \paren
+      {
+        x
+        ,
+        p
+      }
+      =
+      \satysfifi-internal-empty-paren-bar-middle
+      {
+        \paren
+        {
+          \frac
+          {
+            \partial
+            H
+            \paren
+            {
+              a
+              ,
+              b
+            }
+          }
+          {
+            \partial
+            b
+          }
+          ,
+          -
+          \frac
+          {
+            \partial
+            H
+            \paren
+            {
+              a
+              ,
+              b
+            }
+          }
+          {
+            \partial
+            a
+          }
+        }
+      }
+      _
+      {
+        a
+        =
+        x
+        ,
+        b
+        =
+        p
+      }
+    });
+  >
+>

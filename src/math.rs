@@ -19,12 +19,16 @@ pub enum LeftParenKind {
 pub enum BSLeftKind {
     LeftParen,
     LeftBracket,
+    LeftPipe,
+    LeftEmpty,
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum BSRightKind {
     RightParen,
     RightBracket,
+    RightEmpty,
+    RightPipe,
 }
 
 fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
@@ -59,8 +63,13 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
         }
     }
 
-    for left in &["paren-left", "sqbracket-left"] {
-        for right in &["sqbracket-right", "paren-right"] {
+    for left in &["paren-left", "sqbracket-left", "empty-paren", "bar-middle"] {
+        for right in &[
+            "sqbracket-right",
+            "paren-right",
+            "empty-paren",
+            "bar-middle",
+        ] {
             if what_to_activate
                 .contains(&format!("\\satysfifi-internal-{}-{}", left, right).clone())
             {
@@ -122,6 +131,33 @@ fn to_stuffs_(
                                 hopefully_something.expect("should not happen"),
                             ));
                         }
+                        tok::TokenType::OrdinaryOperator => {
+                            if next_tok.str_repr == "|" {
+                                let mut new_stack = paren_stack.to_owned();
+                                new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftPipe));
+                                let (inner_stuffs, hopefully_something) =
+                                    to_stuffs_(&mut iter, &*new_stack)?;
+
+                                res.push(Stuff::LeftRightPair(
+                                    BSLeftKind::LeftPipe,
+                                    inner_stuffs,
+                                    hopefully_something.expect("should not happen"),
+                                ));
+                            } else if next_tok.str_repr == "." {
+                                let mut new_stack = paren_stack.to_owned();
+                                new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftEmpty));
+                                let (inner_stuffs, hopefully_something) =
+                                    to_stuffs_(&mut iter, &*new_stack)?;
+
+                                res.push(Stuff::LeftRightPair(
+                                    BSLeftKind::LeftEmpty,
+                                    inner_stuffs,
+                                    hopefully_something.expect("should not happen"),
+                                ));
+                            } else {
+                                unimplemented!("unimplemented token found after `\\left`")
+                            }
+                        }
                         _ => unimplemented!("unimplemented token found after `\\left`"),
                     }
                 } else if x.str_repr == "\\right" {
@@ -157,6 +193,41 @@ fn to_stuffs_(
                                 ));
                             }
                         },
+                        tok::TokenType::OrdinaryOperator => {
+                            if next_tok.str_repr == "." {
+                                match paren_stack.last() {
+                                    None => {
+                                        return Err("unmatched `\\right.`".to_string());
+                                    }
+                                    Some(LeftParenKind::BackslashLeft(_)) => {
+                                        return Ok((res, Some(BSRightKind::RightEmpty)));
+                                    }
+                                    Some(&x) => {
+                                        return Err(format!(
+                                            "`\\right.` encountered before {} was matched",
+                                            x.msg()
+                                        ));
+                                    }
+                                }
+                            } else if next_tok.str_repr == "|" {
+                                match paren_stack.last() {
+                                    None => {
+                                        return Err("unmatched `\\right|`".to_string());
+                                    }
+                                    Some(LeftParenKind::BackslashLeft(_)) => {
+                                        return Ok((res, Some(BSRightKind::RightPipe)));
+                                    }
+                                    Some(&x) => {
+                                        return Err(format!(
+                                            "`\\right|` encountered before {} was matched",
+                                            x.msg()
+                                        ));
+                                    }
+                                }
+                            } else {
+                                unimplemented!("unimplemented token found after `\\right`")
+                            }
+                        }
                         _ => unimplemented!("unimplemented token found after `\\right`"),
                     }
                 } else {
@@ -253,6 +324,8 @@ impl LeftParenKind {
             LeftParenKind::BareLeftBrace => "a left brace `{`",
             LeftParenKind::BackslashLeft(BSLeftKind::LeftParen) => "`\\left(`",
             LeftParenKind::BackslashLeft(BSLeftKind::LeftBracket) => "`\\left[`",
+            LeftParenKind::BackslashLeft(BSLeftKind::LeftEmpty) => "`\\left.`",
+            LeftParenKind::BackslashLeft(BSLeftKind::LeftPipe) => "`\\left|`",
             LeftParenKind::BareLeftParen => "a left paren `(`",
             LeftParenKind::BareLeftBracket => "a left bracket `[`",
         }
@@ -264,6 +337,8 @@ impl BSLeftKind {
         match self {
             BSLeftKind::LeftParen => BSRightKind::RightParen,
             BSLeftKind::LeftBracket => BSRightKind::RightBracket,
+            BSLeftKind::LeftEmpty => BSRightKind::RightEmpty,
+            BSLeftKind::LeftPipe => BSRightKind::RightPipe,
         }
     }
 }
@@ -307,7 +382,7 @@ pub fn print_math(stuffs: &[Stuff], indent: usize) {
 
 fn get_command_name_from_leftright(left: BSLeftKind, right: BSRightKind) -> String {
     if right == left.matching_right() {
-        format!("\\{}", left.matching_name())
+        format!("\\{}", left.satysfi_name_when_pair_matches())
     } else {
         format!(
             "\\satysfifi-internal-{}-{}",
@@ -322,12 +397,16 @@ impl BSLeftKind {
         match self {
             BSLeftKind::LeftBracket => "sqbracket-left",
             BSLeftKind::LeftParen => "paren-left",
+            BSLeftKind::LeftEmpty => "empty-paren",
+            BSLeftKind::LeftPipe => "bar-middle",
         }
     }
-    fn matching_name(self) -> &'static str {
+    fn satysfi_name_when_pair_matches(self) -> &'static str {
         match self {
             BSLeftKind::LeftBracket => "sqbracket",
             BSLeftKind::LeftParen => "paren",
+            BSLeftKind::LeftEmpty => "satysfi-internal-empty-paren-empty-paren",
+            BSLeftKind::LeftPipe => "abs",
         }
     }
 }
@@ -337,6 +416,8 @@ impl BSRightKind {
         match self {
             BSRightKind::RightBracket => "sqbracket-right",
             BSRightKind::RightParen => "paren-right",
+            BSRightKind::RightEmpty => "empty-paren",
+            BSRightKind::RightPipe => "bar-middle",
         }
     }
 }
