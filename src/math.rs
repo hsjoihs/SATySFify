@@ -124,60 +124,29 @@ fn to_stuffs_(
                     let next_tok = iter
                         .next()
                         .ok_or("end of input encountered after `\\left`")?;
-                    match next_tok.kind {
-                        tok::TokenType::LeftParen => {
-                            let mut new_stack = paren_stack.to_owned();
-                            new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftParen));
-                            let (inner_stuffs, hopefully_something) =
-                                to_stuffs_(&mut iter, &*new_stack)?;
-
-                            res.push(Stuff::LeftRightPair(
-                                BSLeftKind::LeftParen,
-                                inner_stuffs,
-                                hopefully_something.expect("should not happen"),
-                            ));
-                        }
-                        tok::TokenType::LeftBracket => {
-                            let mut new_stack = paren_stack.to_owned();
-                            new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftBracket));
-                            let (inner_stuffs, hopefully_something) =
-                                to_stuffs_(&mut iter, &*new_stack)?;
-
-                            res.push(Stuff::LeftRightPair(
-                                BSLeftKind::LeftBracket,
-                                inner_stuffs,
-                                hopefully_something.expect("should not happen"),
-                            ));
-                        }
+                    let bsleftkind = match next_tok.kind {
+                        tok::TokenType::LeftParen => BSLeftKind::LeftParen,
+                        tok::TokenType::LeftBracket => BSLeftKind::LeftBracket,
                         tok::TokenType::OrdinaryOperator => {
                             if next_tok.str_repr == "\\|" {
-                                let mut new_stack = paren_stack.to_owned();
-                                new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftPipe));
-                                let (inner_stuffs, hopefully_something) =
-                                    to_stuffs_(&mut iter, &*new_stack)?;
-
-                                res.push(Stuff::LeftRightPair(
-                                    BSLeftKind::LeftPipe,
-                                    inner_stuffs,
-                                    hopefully_something.expect("should not happen"),
-                                ));
+                                BSLeftKind::LeftPipe
                             } else if next_tok.str_repr == "." {
-                                let mut new_stack = paren_stack.to_owned();
-                                new_stack.push(LeftParenKind::BackslashLeft(BSLeftKind::LeftEmpty));
-                                let (inner_stuffs, hopefully_something) =
-                                    to_stuffs_(&mut iter, &*new_stack)?;
-
-                                res.push(Stuff::LeftRightPair(
-                                    BSLeftKind::LeftEmpty,
-                                    inner_stuffs,
-                                    hopefully_something.expect("should not happen"),
-                                ));
+                                BSLeftKind::LeftEmpty
                             } else {
                                 unimplemented!("unimplemented token found after `\\left`")
                             }
                         }
                         _ => unimplemented!("unimplemented token found after `\\left`"),
-                    }
+                    };
+                    let mut new_stack = paren_stack.to_owned();
+                    new_stack.push(LeftParenKind::BackslashLeft(bsleftkind));
+                    let (inner_stuffs, hopefully_something) = to_stuffs_(&mut iter, &*new_stack)?;
+
+                    res.push(Stuff::LeftRightPair(
+                        bsleftkind,
+                        inner_stuffs,
+                        hopefully_something.expect("should not happen"),
+                    ));
                 } else if x.str_repr == "\\right" {
                     let next_tok = iter
                         .next()

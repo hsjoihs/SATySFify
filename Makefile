@@ -59,6 +59,8 @@ all:
 	satysfi test/test028.saty
 	./target/debug/SATySFify '|c|^2 = a\cdot a + 4 a\cdot b +4 b\cdot b = 16u^2 - 28u^2 + 16u^2 = 4u^2' > test/test029.saty
 	satysfi test/test029.saty
+	./target/debug/SATySFify $$'N_0\' = \\infty' > test/test030.saty
+	satysfi test/test030.saty
 
 # \dot and \vec are needed 
 #	./target/debug/SATySFify '\dot{x}' > test/test026.saty
