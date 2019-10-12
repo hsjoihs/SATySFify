@@ -105,6 +105,26 @@ impl tok::Token {
     }
 }
 
+impl tok::Token {
+    // convert into BSLeft kind by specifying what it should become after `\left`
+    fn to_bsleftkind(self) -> Option<BSLeftKind> {
+        match self.kind {
+            tok::TokenType::LeftParen => Some(BSLeftKind::LeftParen),
+            tok::TokenType::LeftBracket => Some(BSLeftKind::LeftBracket),
+            tok::TokenType::OrdinaryOperator => {
+                if self.str_repr == "\\|" {
+                    Some(BSLeftKind::LeftPipe)
+                } else if self.str_repr == "." {
+                    Some(BSLeftKind::LeftEmpty)
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
+    }
+}
+
 fn to_stuffs_(
     mut iter: &mut std::vec::IntoIter<tok::Token>,
     paren_stack: &[LeftParenKind],
@@ -124,19 +144,9 @@ fn to_stuffs_(
                     let next_tok = iter
                         .next()
                         .ok_or("end of input encountered after `\\left`")?;
-                    let bsleftkind = match next_tok.kind {
-                        tok::TokenType::LeftParen => BSLeftKind::LeftParen,
-                        tok::TokenType::LeftBracket => BSLeftKind::LeftBracket,
-                        tok::TokenType::OrdinaryOperator => {
-                            if next_tok.str_repr == "\\|" {
-                                BSLeftKind::LeftPipe
-                            } else if next_tok.str_repr == "." {
-                                BSLeftKind::LeftEmpty
-                            } else {
-                                unimplemented!("unimplemented token found after `\\left`")
-                            }
-                        }
-                        _ => unimplemented!("unimplemented token found after `\\left`"),
+                    let bsleftkind = match next_tok.to_bsleftkind() {
+                        Some(x) => x,
+                        None => unimplemented!("unimplemented token found after `\\left`"),
                     };
                     let mut new_stack = paren_stack.to_owned();
                     new_stack.push(LeftParenKind::BackslashLeft(bsleftkind));
