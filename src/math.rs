@@ -5,7 +5,7 @@ pub enum Stuff {
     Simple(tok::Token),
     Braced(Vec<Stuff>),
     LeftRightPair(BSLeftKind, Vec<Stuff>, BSRightKind),
-    MatrixBody(MatrixBody),
+    MatrixBody(Vec<Vec<Vec<Stuff>>>, MatrixEnvironment),
 }
 
 type MatrixBody = Vec<Vec<Vec<Stuff>>>;
@@ -188,7 +188,7 @@ fn read_matrixbody(
     iter: &mut std::iter::Peekable<std::vec::IntoIter<tok::Token>>,
     env: MatrixEnvironment,
 ) -> Result<MatrixBody, String> {
-    iter.next(); // parses off \begin{matrix}
+    iter.next(); // parses off \begin{...}
     type Stuffs = Vec<Stuff>;
     let mut matrix_body: Vec<Vec<Stuffs>> = Vec::new();
     let mut row: Vec<Stuffs> = Vec::new();
@@ -240,15 +240,17 @@ fn read_matrixbody(
     Ok(matrix_body)
 }
 
-#[derive(PartialEq, Eq, Clone, Copy)]
-enum MatrixEnvironment {
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+pub enum MatrixEnvironment {
     Matrix,
+    LowercaseBMatrix,
 }
 
 impl MatrixEnvironment {
     fn to_string(self) -> String {
         match self {
             MatrixEnvironment::Matrix => "matrix".to_string(),
+            MatrixEnvironment::LowercaseBMatrix => "bmatrix".to_string(),
         }
     }
 }
@@ -277,12 +279,16 @@ fn read_until_rightdelimiter_or_ampersand_or_bsbs(
             }
 
             tok::TokenType::BackslashBegin => {
-                if x.str_repr == "\\begin{matrix}" {
-                    let inner_stuffs = read_matrixbody(iter, MatrixEnvironment::Matrix)?;
-                    res.push(Stuff::MatrixBody(inner_stuffs));
+                let env = if x.str_repr == "\\begin{matrix}" {
+                    Ok(MatrixEnvironment::Matrix)
+                } else if x.str_repr == "\\begin{bmatrix}" {
+                    Ok(MatrixEnvironment::LowercaseBMatrix)
                 } else {
-                    return Err(format!("`{}` is not implemented", x.str_repr).to_string());
-                }
+                    Err(format!("`{}` is not implemented", x.str_repr).to_string())
+                }?;
+
+                let inner_stuffs = read_matrixbody(iter, env)?;
+                res.push(Stuff::MatrixBody(inner_stuffs, env));
             }
 
             tok::TokenType::LeftParen => {
@@ -450,21 +456,32 @@ pub fn print_math(stuffs: &[Stuff], indent: usize) {
                 print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
-            Stuff::MatrixBody(matrix_body) => {
-                println!("{:indent$}\\matrix-body![", "", indent = indent);
-                for row in matrix_body {
-                    println!("{:indent$}[", "", indent = indent + 2);
-                    for cell in row {
-                        println!("{:indent$}${{", "", indent = indent + 4);
-                        print_math(cell, indent + 6);
-                        println!("{:indent$}}};", "", indent = indent + 4);
-                    }
-                    println!("{:indent$}];", "", indent = indent + 2);
+            Stuff::MatrixBody(matrix_body, env) => match *env {
+                MatrixEnvironment::Matrix => {
+                    print_matrix_body(&matrix_body, indent);
                 }
-                println!("{:indent$}]", "", indent = indent);
-            }
+                MatrixEnvironment::LowercaseBMatrix => {
+                    println!("{:indent$}\\sqbracket{{", "", indent = indent);
+                    print_matrix_body(&matrix_body, indent + 2);
+                    println!("{:indent$}}}", "", indent = indent);
+                }
+            },
         }
     }
+}
+
+fn print_matrix_body(matrix_body: &MatrixBody, indent: usize) {
+    println!("{:indent$}\\matrix-body![", "", indent = indent);
+    for row in matrix_body {
+        println!("{:indent$}[", "", indent = indent + 2);
+        for cell in row {
+            println!("{:indent$}${{", "", indent = indent + 4);
+            print_math(cell, indent + 6);
+            println!("{:indent$}}};", "", indent = indent + 4);
+        }
+        println!("{:indent$}];", "", indent = indent + 2);
+    }
+    println!("{:indent$}]", "", indent = indent);
 }
 
 fn get_command_name_from_leftright(left: BSLeftKind, right: BSRightKind) -> String {
@@ -510,7 +527,7 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
                     defs.insert(k.to_string());
                 }
             }
-            Stuff::MatrixBody(matrix_body) => {
+            Stuff::MatrixBody(matrix_body, env) => {
                 for row in matrix_body {
                     for cell in row {
                         let internal = get_what_to_activate(cell);
