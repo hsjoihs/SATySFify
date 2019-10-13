@@ -212,38 +212,26 @@ fn read_until_rightdelimiter(
                     };
                     let kind = LeftParenKind::BackslashLeft(bsleftkind);
                     let inner_stuffs = read_until_rightdelimiter(iter)?;
-                    match iter.next() {
-                        None => {
-                            return Err(format!(
-                                "end of input encountered before {} was matched",
-                                kind.msg()
-                            ))
+                    let x = iter.next().ok_or(&format!(
+                        "end of input encountered before {} was matched",
+                        kind.msg()
+                    ))?;
+                    if x.kind == tok::TokenType::BackslashFollowedByAlphanumerics {
+                        if x.str_repr != "\\right" {
+                            unreachable!();
                         }
-                        Some(x) => match x.kind {
-                            tok::TokenType::BackslashFollowedByAlphanumerics => {
-                                if x.str_repr == "\\right" {
-                                    let next_tok = iter
-                                        .next()
-                                        .ok_or("end of input encountered after `\\right`")?;
-                                    let bsrightkind = next_tok.to_bsrightkind();
 
-                                    res.push(Stuff::LeftRightPair(
-                                        bsleftkind,
-                                        inner_stuffs,
-                                        bsrightkind,
-                                    ));
-                                } else {
-                                    unreachable!();
-                                }
-                            }
-                            t => {
-                                return Err(format!(
-                                    "{} encountered before {} was matched",
-                                    t.rightdelimiter_msg().unwrap(),
-                                    kind.msg()
-                                ))
-                            }
-                        },
+                        let next_tok = iter
+                            .next()
+                            .ok_or("end of input encountered after `\\right`")?;
+                        let bsrightkind = next_tok.to_bsrightkind();
+                        res.push(Stuff::LeftRightPair(bsleftkind, inner_stuffs, bsrightkind));
+                    } else {
+                        return Err(format!(
+                            "{} encountered before {} was matched",
+                            x.kind.rightdelimiter_msg().unwrap(),
+                            kind.msg()
+                        ));
                     }
                 } else if x.str_repr == "\\right" {
                     // no consumption; return
