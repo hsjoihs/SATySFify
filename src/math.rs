@@ -32,9 +32,18 @@ pub enum BSRightKind {
 }
 
 fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
-    match to_stuffs_(&mut input.into_iter(), &Vec::new())? {
-        (ans, None) => Ok(ans),
-        _ => unreachable!(),
+    let mut iter = input.into_iter().peekable();
+    let ans = read_until_rightdelimiter(&mut iter)?;
+    match iter.next() {
+        None => Ok(ans),
+
+        Some(x) => match x.kind {
+            tok::TokenType::BackslashFollowedByAlphanumerics => {
+                return Err("unmatched `\\right`".to_string())
+            }
+
+            k => return Err(format!("unmatched {}", k.rightdelimiter_msg().unwrap())),
+        },
     }
 }
 
@@ -103,9 +112,7 @@ impl tok::Token {
             _ => unimplemented!("unimplemented token found after `\\right`"),
         }
     }
-}
 
-impl tok::Token {
     // convert into BSLeft kind by specifying what it should become after `\left`
     fn to_bsleftkind(self) -> Option<BSLeftKind> {
         match self.kind {
@@ -125,71 +132,64 @@ impl tok::Token {
     }
 }
 
-fn to_stuffs_(
-    mut iter: &mut std::vec::IntoIter<tok::Token>,
-    paren_stack: &[LeftParenKind],
-) -> Result<(Vec<Stuff>, Option<BSRightKind>), String> {
+impl tok::TokenType {
+    fn rightdelimiter_msg(self) -> Option<&'static str> {
+        match self {
+            tok::TokenType::RightBrace => Some("right brace"),
+            tok::TokenType::RightParen => Some("right paren"),
+            tok::TokenType::RightBracket => Some("right bracket"),
+            _ => None,
+        }
+    }
+}
+
+fn read_with_bare_paren_pair(
+    iter: &mut std::iter::Peekable<std::vec::IntoIter<tok::Token>>,
+    kind: LeftParenKind,
+    right: tok::TokenType,
+) -> Result<Vec<Stuff>, String> {
+    iter.next();
+    let inner_stuffs = read_until_rightdelimiter(iter)?;
+    let x = iter.next().expect(&format!(
+        "end of input encountered before {} was matched",
+        kind.msg()
+    ));
+    if x.kind != right {
+        return Err(format!(
+            "{} encountered before {} was matched",
+            x.kind.rightdelimiter_msg().unwrap(),
+            kind.msg()
+        ));
+    }
+    Ok(inner_stuffs)
+}
+
+fn read_until_rightdelimiter(
+    iter: &mut std::iter::Peekable<std::vec::IntoIter<tok::Token>>,
+) -> Result<Vec<Stuff>, String> {
     let mut res = Vec::new();
 
-    while let Some(x) = iter.next() {
+    while let Some(x) = iter.peek() {
         match x.kind {
+            tok::TokenType::RightBrace
+            | tok::TokenType::RightParen
+            | tok::TokenType::RightBracket => {
+                return Ok(res);
+            }
             tok::TokenType::Alphanumeric
             | tok::TokenType::OrdinaryOperator
             | tok::TokenType::Underscore
             | tok::TokenType::Caret => {
-                res.push(Stuff::Simple(x));
-            }
-            tok::TokenType::BackslashFollowedByAlphanumerics => {
-                if x.str_repr == "\\left" {
-                    let next_tok = iter
-                        .next()
-                        .ok_or("end of input encountered after `\\left`")?;
-                    let bsleftkind = match next_tok.to_bsleftkind() {
-                        Some(x) => x,
-                        None => unimplemented!("unimplemented token found after `\\left`"),
-                    };
-                    let mut new_stack = paren_stack.to_owned();
-                    new_stack.push(LeftParenKind::BackslashLeft(bsleftkind));
-                    let (inner_stuffs, hopefully_something) = to_stuffs_(&mut iter, &*new_stack)?;
-
-                    res.push(Stuff::LeftRightPair(
-                        bsleftkind,
-                        inner_stuffs,
-                        hopefully_something.expect("should not happen"),
-                    ));
-                } else if x.str_repr == "\\right" {
-                    let next_tok = iter
-                        .next()
-                        .ok_or("end of input encountered after `\\right`")?;
-                    let bsrightkind = next_tok.to_bsrightkind();
-
-                    match paren_stack.last() {
-                        None => {
-                            return Err("unmatched {}".to_string());
-                        }
-                        Some(LeftParenKind::BackslashLeft(_)) => {
-                            return Ok((res, Some(bsrightkind)));
-                        }
-                        Some(&x) => {
-                            return Err(format!(
-                                "{} encountered before {} was matched",
-                                bsrightkind.msg(),
-                                x.msg()
-                            ));
-                        }
-                    };
-                } else {
-                    res.push(Stuff::Simple(x));
-                }
+                let x_ = iter.next().unwrap();
+                res.push(Stuff::Simple(x_));
             }
 
             tok::TokenType::LeftParen => {
-                let mut new_stack = paren_stack.to_owned();
-                new_stack.push(LeftParenKind::BareLeftParen);
-                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
-                if hopefully_none.is_some() {
-                    unreachable!();
-                }
+                let inner_stuffs = read_with_bare_paren_pair(
+                    iter,
+                    LeftParenKind::BareLeftParen,
+                    tok::TokenType::RightParen,
+                )?;
                 res.push(Stuff::Simple(tok::Token {
                     kind: tok::TokenType::BackslashFollowedByAlphanumerics,
                     str_repr: "\\paren".to_string(),
@@ -197,73 +197,83 @@ fn to_stuffs_(
                 res.push(Stuff::Braced(inner_stuffs));
             }
             tok::TokenType::LeftBrace => {
-                let mut new_stack = paren_stack.to_owned();
-                new_stack.push(LeftParenKind::BareLeftBrace);
-                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
-                if hopefully_none.is_some() {
-                    unreachable!();
-                }
+                let inner_stuffs = read_with_bare_paren_pair(
+                    iter,
+                    LeftParenKind::BareLeftBrace,
+                    tok::TokenType::RightBrace,
+                )?;
                 res.push(Stuff::Braced(inner_stuffs));
             }
             tok::TokenType::LeftBracket => {
-                let mut new_stack = paren_stack.to_owned();
-                new_stack.push(LeftParenKind::BareLeftBracket);
-                let (inner_stuffs, hopefully_none) = to_stuffs_(&mut iter, &*new_stack)?;
-                if hopefully_none.is_some() {
-                    unreachable!();
-                }
+                let inner_stuffs = read_with_bare_paren_pair(
+                    iter,
+                    LeftParenKind::BareLeftBracket,
+                    tok::TokenType::RightBracket,
+                )?;
                 res.push(Stuff::Simple(tok::Token {
                     kind: tok::TokenType::BackslashFollowedByAlphanumerics,
                     str_repr: "\\sqbracket".to_string(),
                 }));
                 res.push(Stuff::Braced(inner_stuffs));
             }
-            tok::TokenType::RightBrace => match paren_stack.last() {
-                None => return Err("unmatched right brace".to_string()),
-                Some(LeftParenKind::BareLeftBrace) => {
-                    return Ok((res, None));
+            tok::TokenType::BackslashFollowedByAlphanumerics => {
+                if x.str_repr == "\\left" {
+                    iter.next();
+                    let next_tok = iter
+                        .next()
+                        .ok_or("end of input encountered after `\\left`")?;
+                    let bsleftkind = match next_tok.to_bsleftkind() {
+                        Some(x) => x,
+                        None => unimplemented!("unimplemented token found after `\\left`"),
+                    };
+                    let kind = LeftParenKind::BackslashLeft(bsleftkind);
+                    let inner_stuffs = read_until_rightdelimiter(iter)?;
+                    match iter.next() {
+                        None => {
+                            return Err(format!(
+                                "end of input encountered before {} was matched",
+                                kind.msg()
+                            ))
+                        }
+                        Some(x) => match x.kind {
+                            tok::TokenType::BackslashFollowedByAlphanumerics => {
+                                if x.str_repr == "\\right" {
+                                    let next_tok = iter
+                                        .next()
+                                        .ok_or("end of input encountered after `\\right`")?;
+                                    let bsrightkind = next_tok.to_bsrightkind();
+
+                                    res.push(Stuff::LeftRightPair(
+                                        bsleftkind,
+                                        inner_stuffs,
+                                        bsrightkind,
+                                    ));
+                                } else {
+                                    unreachable!();
+                                }
+                            }
+                            t => {
+                                return Err(format!(
+                                    "{} encountered before {} was matched",
+                                    t.rightdelimiter_msg().unwrap(),
+                                    kind.msg()
+                                ))
+                            }
+                        },
+                    }
+                } else if x.str_repr == "\\right" {
+                    // no consumption; return
+                    return Ok(res);
+                } else {
+                    let x_ = iter.next().unwrap();
+                    res.push(Stuff::Simple(x_));
                 }
-                Some(&x) => {
-                    return Err(format!(
-                        "right brace encountered before {} was matched",
-                        x.msg()
-                    ))
-                }
-            },
-            tok::TokenType::RightParen => match paren_stack.last() {
-                None => return Err("unmatched right paren".to_string()),
-                Some(LeftParenKind::BareLeftParen) => {
-                    return Ok((res, None));
-                }
-                Some(&x) => {
-                    return Err(format!(
-                        "right paren encountered before {} was matched",
-                        x.msg()
-                    ))
-                }
-            },
-            tok::TokenType::RightBracket => match paren_stack.last() {
-                None => return Err("unmatched right bracket".to_string()),
-                Some(LeftParenKind::BareLeftBracket) => {
-                    return Ok((res, None));
-                }
-                Some(&x) => {
-                    return Err(format!(
-                        "right bracket encountered before {} was matched",
-                        x.msg()
-                    ))
-                }
-            },
+            }
         };
     }
 
-    match paren_stack.last() {
-        None => Ok((res, None)),
-        Some(&x) => Err(format!(
-            "end of input encountered before {} was matched",
-            x.msg()
-        )),
-    }
+    iter.next();
+    Ok(res)
 }
 
 impl LeftParenKind {
@@ -276,17 +286,6 @@ impl LeftParenKind {
             LeftParenKind::BackslashLeft(BSLeftKind::LeftPipe) => "`\\left|`",
             LeftParenKind::BareLeftParen => "a left paren `(`",
             LeftParenKind::BareLeftBracket => "a left bracket `[`",
-        }
-    }
-}
-
-impl BSRightKind {
-    fn msg(self) -> &'static str {
-        match self {
-            BSRightKind::RightBracket => "`\\right]`",
-            BSRightKind::RightEmpty => "`\\right.`",
-            BSRightKind::RightParen => "`\\right)`",
-            BSRightKind::RightPipe => "`\\right|`",
         }
     }
 }
