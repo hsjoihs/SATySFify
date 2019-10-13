@@ -61,6 +61,10 @@ all:
 	satysfi test/test029.saty
 	./target/debug/SATySFify $$'N_0\' = \\infty' > test/test030.saty
 	satysfi test/test030.saty
+	./target/debug/SATySFify 'A= \begin{matrix} 7/8 & 123/1024 & 5/1024  \\ 11/2048& 127/128 & 5/2048  \\ 1/256 & 1/16 & 239/256 \end{matrix} ' > test/test031.saty
+	satysfi test/test031.saty
+	./target/debug/SATySFify 'A=\left( \begin{matrix} 7/8 & 123/1024 & 5/1024  \\ 11/2048& 127/128 & 5/2048  \\ 1/256 & 1/16 & 239/256 \end{matrix} \right)' > test/test032.saty
+	satysfi test/test032.saty
 
 # \dot and \vec are needed 
 #	./target/debug/SATySFify '\dot{x}' > test/test026.saty

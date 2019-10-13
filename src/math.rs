@@ -5,7 +5,10 @@ pub enum Stuff {
     Simple(tok::Token),
     Braced(Vec<Stuff>),
     LeftRightPair(BSLeftKind, Vec<Stuff>, BSRightKind),
+    MatrixBody(MatrixBody),
 }
+
+type MatrixBody = Vec<Vec<Vec<Stuff>>>;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum LeftParenKind {
@@ -40,6 +43,49 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
         (
             "\\satysfify-internal-prime".to_string(),
             "let-math \\satysfify-internal-prime = math-char MathOrd `′` in ".to_string(),
+        ),
+        (
+            "\\matrix-body".to_string(),
+            r#"
+let matrix-body mss = let center ctx m = inline-fil ++ embed-math ctx m ++ inline-fil in
+    let body = text-in-math MathInner (fun ctx -> (
+      let size = get-font-size ctx in
+      let pads-normal = (0pt, 0pt, size *' 0.25, size *' 0.25) in
+      let pads-top = (0pt, 0pt, 0pt, size *' 0.25) in
+      let pads-bottom = (0pt, 0pt, size *' 0.25, 0pt) in
+      let pads-single = (0pt, 0pt, 0pt, 0pt) in
+      let cell-of-m pads m = NormalCell(pads, inline-skip size ++ center ctx m) in
+      let cells-of-ms pads ms =
+        (match ms with
+         | [] -> []
+         | m :: ms ->
+           (let leftmost = NormalCell(pads, center ctx m) in
+            let rest = List.map (cell-of-m pads) ms in
+            leftmost :: rest))
+      in
+      let-rec cellss-of-mss-tail mss =
+        (match mss with
+         | [] -> []
+         | ms :: [] -> [cells-of-ms pads-bottom ms]
+         | ms :: mss -> (cells-of-ms pads-normal ms) :: (cellss-of-mss-tail mss))
+      in
+      let cellss =
+        (match mss with
+         | [] -> []
+         | ms :: [] -> [cells-of-ms pads-single ms]
+         | ms :: mss -> (cells-of-ms pads-top ms) :: (cellss-of-mss-tail mss))
+      in
+      let grf = fun _ _ -> [] in
+      let ib = tabular cellss grf in
+      let (_, height, depth) = get-natural-metrics ib in
+      let hgtaxis = get-axis-height ctx in
+      let rising = hgtaxis -' (height +' depth) *' 0.5 in
+      raise-inline rising ib)) 
+    in body in
+let-math \matrix mss = math-paren Math.paren-left Math.paren-right (matrix-body mss) in
+let-math \matrix-body mss = matrix-body mss in
+            "#
+            .to_string(),
         ),
     ]
     .iter()
@@ -122,7 +168,7 @@ fn read_with_bare_paren_pair(
     right: tok::TokenType,
 ) -> Result<Vec<Stuff>, String> {
     iter.next();
-    let inner_stuffs = read_until_rightdelimiter(iter)?;
+    let inner_stuffs = read_until_rightdelimiter_or_ampersand_or_bsbs(iter)?;
     let x = iter.next().ok_or(&format!(
         "end of input encountered before {} was matched",
         kind.msg()
@@ -137,7 +183,60 @@ fn read_with_bare_paren_pair(
     Ok(inner_stuffs)
 }
 
-fn read_until_rightdelimiter(
+fn read_matrixbody(
+    iter: &mut std::iter::Peekable<std::vec::IntoIter<tok::Token>>,
+) -> Result<MatrixBody, String> {
+    iter.next(); // parses off \begin{matrix}
+    type Stuffs = Vec<Stuff>;
+    let mut matrix_body: Vec<Vec<Stuffs>> = Vec::new();
+    let mut row: Vec<Stuffs> = Vec::new();
+    loop {
+        let inner_stuffs = read_until_rightdelimiter_or_ampersand_or_bsbs(iter)?;
+        match iter.peek() {
+            None => {
+                return Err(format!(
+                    "end of input encountered before `\\begin{{matrix}}` was matched"
+                ))
+            }
+            Some(x) => match x.kind {
+                tok::TokenType::Ampersand => {
+                    row.push(inner_stuffs);
+                    iter.next();
+                }
+                tok::TokenType::DoubleBackslash => {
+                    row.push(inner_stuffs);
+                    matrix_body.push(row);
+                    row = Vec::new();
+                    iter.next();
+                }
+                tok::TokenType::BackslashEnd => {
+                    if x.str_repr != "\\end{matrix}" {
+                        return Err(format!(
+                            "{} encountered before `\\begin{{matrix}}` was matched",
+                            x.str_repr
+                        ));
+                    }
+
+                    iter.next();
+
+                    // We need to ignore exactly one \\ .
+                    if row.is_empty() {
+                        // \\ has done its job
+                        break;
+                    } else {
+                        row.push(inner_stuffs);
+                        matrix_body.push(row);
+                        break;
+                    }
+                }
+                _ => return Err(format!("unmatched `{}` inside a matrix", x.str_repr)),
+            },
+        }
+    }
+    Ok(matrix_body)
+}
+
+fn read_until_rightdelimiter_or_ampersand_or_bsbs(
     iter: &mut std::iter::Peekable<std::vec::IntoIter<tok::Token>>,
 ) -> Result<Vec<Stuff>, String> {
     let mut res = Vec::new();
@@ -146,7 +245,10 @@ fn read_until_rightdelimiter(
         match x.kind {
             tok::TokenType::RightBrace
             | tok::TokenType::RightParen
-            | tok::TokenType::RightBracket => {
+            | tok::TokenType::RightBracket
+            | tok::TokenType::Ampersand
+            | tok::TokenType::DoubleBackslash
+            | tok::TokenType::BackslashEnd => {
                 return Ok(res);
             }
             tok::TokenType::Alphanumeric
@@ -155,6 +257,15 @@ fn read_until_rightdelimiter(
             | tok::TokenType::Caret => {
                 let x_ = iter.next().unwrap(); // iter.peek() gave Some(); hence never fails
                 res.push(Stuff::Simple(x_));
+            }
+
+            tok::TokenType::BackslashBegin => {
+                if x.str_repr != "\\begin{matrix}" {
+                    return Err(format!("`{}` is not implemented", x.str_repr).to_string());
+                }
+
+                let inner_stuffs = read_matrixbody(iter)?;
+                res.push(Stuff::MatrixBody(inner_stuffs));
             }
 
             tok::TokenType::LeftParen => {
@@ -200,7 +311,7 @@ fn read_until_rightdelimiter(
                         None => unimplemented!("unimplemented token found after `\\left`"),
                     };
                     let kind = LeftParenKind::BackslashLeft(bsleftkind);
-                    let inner_stuffs = read_until_rightdelimiter(iter)?;
+                    let inner_stuffs = read_until_rightdelimiter_or_ampersand_or_bsbs(iter)?;
                     let x = iter.next().ok_or(&format!(
                         "end of input encountered before {} was matched",
                         kind.msg()
@@ -322,6 +433,19 @@ pub fn print_math(stuffs: &[Stuff], indent: usize) {
                 print_math(vec, indent + 2);
                 println!("{:indent$}}}", "", indent = indent);
             }
+            Stuff::MatrixBody(matrix_body) => {
+                println!("{:indent$}\\matrix-body![", "", indent = indent);
+                for row in matrix_body {
+                    println!("{:indent$}[", "", indent = indent + 2);
+                    for cell in row {
+                        println!("{:indent$}${{", "", indent = indent + 4);
+                        print_math(cell, indent + 6);
+                        println!("{:indent$}}};", "", indent = indent + 4);
+                    }
+                    println!("{:indent$}];", "", indent = indent + 2);
+                }
+                println!("{:indent$}]", "", indent = indent);
+            }
         }
     }
 }
@@ -369,6 +493,17 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
                     defs.insert(k.to_string());
                 }
             }
+            Stuff::MatrixBody(matrix_body) => {
+                for row in matrix_body {
+                    for cell in row {
+                        let internal = get_what_to_activate(cell);
+                        for k in &internal {
+                            defs.insert(k.to_string());
+                        }
+                    }
+                }
+                defs.insert("\\matrix-body".to_string());
+            }
         }
     }
     defs
@@ -376,7 +511,7 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
 
 pub fn to_math(input: Vec<tok::Token>) -> Result<Math, String> {
     let mut iter = input.into_iter().peekable();
-    let ans = read_until_rightdelimiter(&mut iter)?;
+    let ans = read_until_rightdelimiter_or_ampersand_or_bsbs(&mut iter)?;
     match iter.next() {
         None => Ok(Math { stuffs: ans }), /* have consumed all the inputs */
         Some(x) => Err(format!("unmatched `{}`", x.str_repr)),
