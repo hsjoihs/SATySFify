@@ -31,20 +31,6 @@ pub enum BSRightKind {
     RightPipe,
 }
 
-fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
-    let mut iter = input.into_iter().peekable();
-    let ans = read_until_rightdelimiter(&mut iter)?;
-    match iter.next() {
-        None => Ok(ans),
-
-        Some(x) => Err(match x.kind {
-            tok::TokenType::BackslashFollowedByAlphanumerics => "unmatched `\\right`".to_string(),
-
-            k => format!("unmatched {}", k.rightdelimiter_msg().unwrap()),
-        }),
-    }
-}
-
 pub fn activated_math_addons(math: &Math) -> Vec<String> {
     let addon_defs: HashMap<String, String> = [
         (
@@ -297,6 +283,33 @@ impl BSLeftKind {
             BSLeftKind::LeftPipe => BSRightKind::RightPipe,
         }
     }
+    fn satysfi_name(self) -> &'static str {
+        match self {
+            BSLeftKind::LeftBracket => "sqbracket-left",
+            BSLeftKind::LeftParen => "paren-left",
+            BSLeftKind::LeftEmpty => "empty-paren",
+            BSLeftKind::LeftPipe => "bar-middle",
+        }
+    }
+    fn satysfi_name_when_pair_matches(self) -> &'static str {
+        match self {
+            BSLeftKind::LeftBracket => "sqbracket",
+            BSLeftKind::LeftParen => "paren",
+            BSLeftKind::LeftEmpty => "satysfify-internal-empty-paren-empty-paren",
+            BSLeftKind::LeftPipe => "abs",
+        }
+    }
+}
+
+impl BSRightKind {
+    fn satysfi_name(self) -> &'static str {
+        match self {
+            BSRightKind::RightBracket => "sqbracket-right",
+            BSRightKind::RightParen => "paren-right",
+            BSRightKind::RightEmpty => "empty-paren",
+            BSRightKind::RightPipe => "bar-middle",
+        }
+    }
 }
 
 pub fn print_math(stuffs: &[Stuff], indent: usize) {
@@ -348,36 +361,6 @@ fn get_command_name_from_leftright(left: BSLeftKind, right: BSRightKind) -> Stri
     }
 }
 
-impl BSLeftKind {
-    fn satysfi_name(self) -> &'static str {
-        match self {
-            BSLeftKind::LeftBracket => "sqbracket-left",
-            BSLeftKind::LeftParen => "paren-left",
-            BSLeftKind::LeftEmpty => "empty-paren",
-            BSLeftKind::LeftPipe => "bar-middle",
-        }
-    }
-    fn satysfi_name_when_pair_matches(self) -> &'static str {
-        match self {
-            BSLeftKind::LeftBracket => "sqbracket",
-            BSLeftKind::LeftParen => "paren",
-            BSLeftKind::LeftEmpty => "satysfify-internal-empty-paren-empty-paren",
-            BSLeftKind::LeftPipe => "abs",
-        }
-    }
-}
-
-impl BSRightKind {
-    fn satysfi_name(self) -> &'static str {
-        match self {
-            BSRightKind::RightBracket => "sqbracket-right",
-            BSRightKind::RightParen => "paren-right",
-            BSRightKind::RightEmpty => "empty-paren",
-            BSRightKind::RightPipe => "bar-middle",
-        }
-    }
-}
-
 use std::collections::HashMap;
 
 pub struct Math {
@@ -415,6 +398,15 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
 }
 
 pub fn to_math(input: Vec<tok::Token>) -> Result<Math, String> {
-    let stuffs = to_stuffs(input)?;
+    let mut iter = input.into_iter().peekable();
+    let ans = read_until_rightdelimiter(&mut iter)?;
+    let stuffs = match iter.next() {
+        None => Ok(ans),
+        Some(x) => Err(match x.kind {
+            tok::TokenType::BackslashFollowedByAlphanumerics => "unmatched `\\right`".to_string(),
+
+            k => format!("unmatched {}", k.rightdelimiter_msg().unwrap()),
+        }),
+    }?;
     Ok(Math { stuffs })
 }
