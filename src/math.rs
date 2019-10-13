@@ -46,6 +46,7 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
         ),
         (
             "\\matrix-body".to_string(),
+            // Taken from https://github.com/nekketsuuu/satysfi-matrix
             r#"
 let matrix-body mss = let center ctx m = inline-fil ++ embed-math ctx m ++ inline-fil in
     let body = text-in-math MathInner (fun ctx -> (
@@ -185,6 +186,7 @@ fn read_with_bare_paren_pair(
 
 fn read_matrixbody(
     iter: &mut std::iter::Peekable<std::vec::IntoIter<tok::Token>>,
+    env: MatrixEnvironment,
 ) -> Result<MatrixBody, String> {
     iter.next(); // parses off \begin{matrix}
     type Stuffs = Vec<Stuff>;
@@ -195,7 +197,8 @@ fn read_matrixbody(
         match iter.peek() {
             None => {
                 return Err(format!(
-                    "end of input encountered before `\\begin{{matrix}}` was matched"
+                    "end of input encountered before `\\begin{{{}}}` was matched",
+                    env.to_string()
                 ))
             }
             Some(x) => match x.kind {
@@ -210,9 +213,10 @@ fn read_matrixbody(
                     iter.next();
                 }
                 tok::TokenType::BackslashEnd => {
-                    if x.str_repr != "\\end{matrix}" {
+                    if x.str_repr != format!("\\end{{{}}}", env.to_string()) {
                         return Err(format!(
-                            "{} encountered before `\\begin{{matrix}}` was matched",
+                            "{} encountered before `\\begin{{{}}}` was matched",
+                            env.to_string(),
                             x.str_repr
                         ));
                     }
@@ -234,6 +238,19 @@ fn read_matrixbody(
         }
     }
     Ok(matrix_body)
+}
+
+#[derive(PartialEq, Eq, Clone, Copy)]
+enum MatrixEnvironment {
+    Matrix,
+}
+
+impl MatrixEnvironment {
+    fn to_string(self) -> String {
+        match self {
+            MatrixEnvironment::Matrix => "matrix".to_string(),
+        }
+    }
 }
 
 fn read_until_rightdelimiter_or_ampersand_or_bsbs(
@@ -260,12 +277,12 @@ fn read_until_rightdelimiter_or_ampersand_or_bsbs(
             }
 
             tok::TokenType::BackslashBegin => {
-                if x.str_repr != "\\begin{matrix}" {
+                if x.str_repr == "\\begin{matrix}" {
+                    let inner_stuffs = read_matrixbody(iter, MatrixEnvironment::Matrix)?;
+                    res.push(Stuff::MatrixBody(inner_stuffs));
+                } else {
                     return Err(format!("`{}` is not implemented", x.str_repr).to_string());
                 }
-
-                let inner_stuffs = read_matrixbody(iter)?;
-                res.push(Stuff::MatrixBody(inner_stuffs));
             }
 
             tok::TokenType::LeftParen => {
