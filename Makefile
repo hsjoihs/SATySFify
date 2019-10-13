@@ -69,6 +69,12 @@ all:
 	satysfi test/test033.saty
 	./target/debug/SATySFify 'F_{\mu\nu} =\eta_{\mu\alpha}F^{\alpha\beta}\eta_{\beta\nu} = \begin{bmatrix}   0     &  E_x/c &  E_y/c &  E_z/c \\     -E_x/c &  0     & -B_z   &  B_y    \\     -E_y/c &  B_z   &  0     & -B_x   \\     -E_z/c & -B_y   &  B_x   &  0  \end{bmatrix}' > test/test034.saty
 	satysfi test/test034.saty
+	./target/debug/SATySFify 'F_{\mu\nu} =\eta_{\mu\alpha}F^{\alpha\beta}\eta_{\beta\nu} = \begin{pmatrix}   0     &  E_x/c &  E_y/c &  E_z/c \\     -E_x/c &  0     & -B_z   &  B_y    \\     -E_y/c &  B_z   &  0     & -B_x   \\     -E_z/c & -B_y   &  B_x   &  0  \end{pmatrix}' > test/test035.saty
+	satysfi test/test035.saty
+	./target/debug/SATySFify '\begin{vmatrix}1 & 2 \\ 3 & 4 \\ \end{vmatrix}' > test/test036.saty
+	satysfi test/test036.saty
+	./target/debug/SATySFify '\begin{Vmatrix}1 & 2 \\ 3 & 4 \\ \end{Vmatrix}' > test/test037.saty
+	satysfi test/test037.saty
 
 # \dot and \vec are needed 
 #	./target/debug/SATySFify '\dot{x}' > test/test026.saty

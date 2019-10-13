@@ -244,6 +244,9 @@ fn read_matrixbody(
 pub enum MatrixEnvironment {
     Matrix,
     LowercaseBMatrix,
+    PMatrix,
+    LowercaseVMatrix,
+    UppercaseVMatrix,
 }
 
 impl MatrixEnvironment {
@@ -251,6 +254,9 @@ impl MatrixEnvironment {
         match self {
             MatrixEnvironment::Matrix => "matrix".to_string(),
             MatrixEnvironment::LowercaseBMatrix => "bmatrix".to_string(),
+            MatrixEnvironment::PMatrix => "pmatrix".to_string(),
+            MatrixEnvironment::LowercaseVMatrix => "vmatrix".to_string(),
+            MatrixEnvironment::UppercaseVMatrix => "Vmatrix".to_string(),
         }
     }
 }
@@ -283,6 +289,12 @@ fn read_until_rightdelimiter_or_ampersand_or_bsbs(
                     Ok(MatrixEnvironment::Matrix)
                 } else if x.str_repr == "\\begin{bmatrix}" {
                     Ok(MatrixEnvironment::LowercaseBMatrix)
+                } else if x.str_repr == "\\begin{pmatrix}" {
+                    Ok(MatrixEnvironment::PMatrix)
+                } else if x.str_repr == "\\begin{vmatrix}" {
+                    Ok(MatrixEnvironment::LowercaseVMatrix)
+                } else if x.str_repr == "\\begin{Vmatrix}" {
+                    Ok(MatrixEnvironment::UppercaseVMatrix)
                 } else {
                     Err(format!("`{}` is not implemented", x.str_repr).to_string())
                 }?;
@@ -465,6 +477,21 @@ pub fn print_math(stuffs: &[Stuff], indent: usize) {
                     print_matrix_body(&matrix_body, indent + 2);
                     println!("{:indent$}}}", "", indent = indent);
                 }
+                MatrixEnvironment::PMatrix => {
+                    println!("{:indent$}\\paren{{", "", indent = indent);
+                    print_matrix_body(&matrix_body, indent + 2);
+                    println!("{:indent$}}}", "", indent = indent);
+                }
+                MatrixEnvironment::LowercaseVMatrix => {
+                    println!("{:indent$}\\abs{{", "", indent = indent);
+                    print_matrix_body(&matrix_body, indent + 2);
+                    println!("{:indent$}}}", "", indent = indent);
+                }
+                MatrixEnvironment::UppercaseVMatrix => {
+                    println!("{:indent$}\\norm{{", "", indent = indent);
+                    print_matrix_body(&matrix_body, indent + 2);
+                    println!("{:indent$}}}", "", indent = indent);
+                }
             },
         }
     }
@@ -528,6 +555,14 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
                 }
             }
             Stuff::MatrixBody(matrix_body, env) => {
+                // Every time you add a new environment, you have to think whether you will need some custom code
+                match env {
+                    MatrixEnvironment::Matrix => (),
+                    MatrixEnvironment::LowercaseBMatrix => (),
+                    MatrixEnvironment::LowercaseVMatrix => (),
+                    MatrixEnvironment::PMatrix => (),
+                    MatrixEnvironment::UppercaseVMatrix => (),
+                };
                 for row in matrix_body {
                     for cell in row {
                         let internal = get_what_to_activate(cell);
