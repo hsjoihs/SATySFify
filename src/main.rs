@@ -44,7 +44,6 @@ fn print_satysfi(libs: &[&str], input: &str, indent: usize) -> Result<(), String
     println!("    +math(${{");
 
     math::print_math(&math.stuffs, indent);
-    eprintln!("{:?}", math.stuffs);
 
     println!("    }});");
     println!("  >");
