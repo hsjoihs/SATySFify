@@ -37,13 +37,11 @@ fn to_stuffs(input: Vec<tok::Token>) -> Result<Vec<Stuff>, String> {
     match iter.next() {
         None => Ok(ans),
 
-        Some(x) => match x.kind {
-            tok::TokenType::BackslashFollowedByAlphanumerics => {
-                return Err("unmatched `\\right`".to_string())
-            }
+        Some(x) => Err(match x.kind {
+            tok::TokenType::BackslashFollowedByAlphanumerics => "unmatched `\\right`".to_string(),
 
-            k => return Err(format!("unmatched {}", k.rightdelimiter_msg().unwrap())),
-        },
+            k => format!("unmatched {}", k.rightdelimiter_msg().unwrap()),
+        }),
     }
 }
 
@@ -98,13 +96,13 @@ pub fn activated_math_addons(math: &Math) -> Vec<String> {
 impl tok::Token {
     fn to_bsrightkind(&self) -> BSRightKind {
         match self.kind {
-            tok::TokenType::RightParen => return BSRightKind::RightParen,
-            tok::TokenType::RightBracket => return BSRightKind::RightBracket,
+            tok::TokenType::RightParen => BSRightKind::RightParen,
+            tok::TokenType::RightBracket => BSRightKind::RightBracket,
             tok::TokenType::OrdinaryOperator => {
                 if self.str_repr == "." {
-                    return BSRightKind::RightEmpty;
+                    BSRightKind::RightEmpty
                 } else if self.str_repr == "\\|" {
-                    return BSRightKind::RightPipe;
+                    BSRightKind::RightPipe
                 } else {
                     unimplemented!("unimplemented token found after `\\right`")
                 }
@@ -114,7 +112,7 @@ impl tok::Token {
     }
 
     // convert into BSLeft kind by specifying what it should become after `\left`
-    fn to_bsleftkind(self) -> Option<BSLeftKind> {
+    fn to_bsleftkind(&self) -> Option<BSLeftKind> {
         match self.kind {
             tok::TokenType::LeftParen => Some(BSLeftKind::LeftParen),
             tok::TokenType::LeftBracket => Some(BSLeftKind::LeftBracket),
@@ -150,10 +148,10 @@ fn read_with_bare_paren_pair(
 ) -> Result<Vec<Stuff>, String> {
     iter.next();
     let inner_stuffs = read_until_rightdelimiter(iter)?;
-    let x = iter.next().expect(&format!(
+    let x = iter.next().ok_or(&format!(
         "end of input encountered before {} was matched",
         kind.msg()
-    ));
+    ))?;
     if x.kind != right {
         return Err(format!(
             "{} encountered before {} was matched",
