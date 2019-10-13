@@ -411,7 +411,6 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
             }
         }
     }
-    eprintln!("{:?}", defs);
     defs
 }
 

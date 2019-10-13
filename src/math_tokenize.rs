@@ -26,7 +26,6 @@ pub mod tok {
 
         let mut tokens = Vec::new();
         while let Some(t) = get_token2(&mut iter)? {
-            eprintln!("{}", t.str_repr);
             tokens.push(t);
         }
 
