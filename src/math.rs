@@ -116,17 +116,6 @@ impl tok::Token {
     }
 }
 
-impl tok::TokenType {
-    fn rightdelimiter_msg(self) -> Option<&'static str> {
-        match self {
-            tok::TokenType::RightBrace => Some("right brace"),
-            tok::TokenType::RightParen => Some("right paren"),
-            tok::TokenType::RightBracket => Some("right bracket"),
-            _ => None,
-        }
-    }
-}
-
 fn read_with_bare_paren_pair(
     iter: &mut std::iter::Peekable<std::vec::IntoIter<tok::Token>>,
     kind: LeftParenKind,
@@ -140,8 +129,8 @@ fn read_with_bare_paren_pair(
     ))?;
     if x.kind != right {
         return Err(format!(
-            "{} encountered before {} was matched",
-            x.kind.rightdelimiter_msg().unwrap(),
+            "`{}` encountered before {} was matched",
+            x.str_repr,
             kind.msg()
         ));
     }
@@ -164,7 +153,7 @@ fn read_until_rightdelimiter(
             | tok::TokenType::OrdinaryOperator
             | tok::TokenType::Underscore
             | tok::TokenType::Caret => {
-                let x_ = iter.next().unwrap();
+                let x_ = iter.next().unwrap(); // iter.peek() gave Some(); hence never fails
                 res.push(Stuff::Simple(x_));
             }
 
@@ -229,7 +218,7 @@ fn read_until_rightdelimiter(
                     } else {
                         return Err(format!(
                             "{} encountered before {} was matched",
-                            x.kind.rightdelimiter_msg().unwrap(),
+                            x.str_repr,
                             kind.msg()
                         ));
                     }
@@ -237,7 +226,7 @@ fn read_until_rightdelimiter(
                     // no consumption; return
                     return Ok(res);
                 } else {
-                    let x_ = iter.next().unwrap();
+                    let x_ = iter.next().unwrap(); // iter.peek() gave Some(); hence never fails
                     res.push(Stuff::Simple(x_));
                 }
             }
@@ -388,13 +377,8 @@ fn get_what_to_activate(stuffs: &[Stuff]) -> HashSet<String> {
 pub fn to_math(input: Vec<tok::Token>) -> Result<Math, String> {
     let mut iter = input.into_iter().peekable();
     let ans = read_until_rightdelimiter(&mut iter)?;
-    let stuffs = match iter.next() {
-        None => Ok(ans),
-        Some(x) => Err(match x.kind {
-            tok::TokenType::BackslashFollowedByAlphanumerics => "unmatched `\\right`".to_string(),
-
-            k => format!("unmatched {}", k.rightdelimiter_msg().unwrap()),
-        }),
-    }?;
-    Ok(Math { stuffs })
+    match iter.next() {
+        None => Ok(Math { stuffs: ans }), /* have consumed all the inputs */
+        Some(x) => Err(format!("unmatched `{}`", x.str_repr)),
+    }
 }
